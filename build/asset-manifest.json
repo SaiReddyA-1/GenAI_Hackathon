@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.css": "/SureshTimma/GenAI_Hackathon/static/css/main.d6d82b98.css",
+    "main.js": "/SureshTimma/GenAI_Hackathon/static/js/main.739e0dd5.js",
+    "static/js/239.6bd63a36.chunk.js": "/SureshTimma/GenAI_Hackathon/static/js/239.6bd63a36.chunk.js",
+    "static/js/213.aefd4ad7.chunk.js": "/SureshTimma/GenAI_Hackathon/static/js/213.aefd4ad7.chunk.js",
+    "static/js/732.468e9bb4.chunk.js": "/SureshTimma/GenAI_Hackathon/static/js/732.468e9bb4.chunk.js",
+    "index.html": "/SureshTimma/GenAI_Hackathon/index.html",
+    "main.d6d82b98.css.map": "/SureshTimma/GenAI_Hackathon/static/css/main.d6d82b98.css.map",
+    "main.739e0dd5.js.map": "/SureshTimma/GenAI_Hackathon/static/js/main.739e0dd5.js.map",
+    "239.6bd63a36.chunk.js.map": "/SureshTimma/GenAI_Hackathon/static/js/239.6bd63a36.chunk.js.map",
+    "213.aefd4ad7.chunk.js.map": "/SureshTimma/GenAI_Hackathon/static/js/213.aefd4ad7.chunk.js.map",
+    "732.468e9bb4.chunk.js.map": "/SureshTimma/GenAI_Hackathon/static/js/732.468e9bb4.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.d6d82b98.css",
+    "static/js/main.739e0dd5.js"
+  ]
+}
