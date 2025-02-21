@@ -1,243 +1,241 @@
 import React from 'react';
 import {
-  Grid,
-  Paper,
-  Typography,
-  Button,
   Box,
-  Card,
-  CardContent,
-  Divider,
+  Typography,
+  Container,
+  Paper,
+  TextField,
+  Button,
+  Grid,
 } from '@mui/material';
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
-import html2pdf from 'html2pdf.js';
-import { 
-  TrendingUp, 
-  Group, 
-  AttachMoney, 
-  Warning,
-  Download
-} from '@mui/icons-material';
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import GroupIcon from '@mui/icons-material/Group';
+import SearchIcon from '@mui/icons-material/Search';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 
 const AnalysisDashboard = ({ analysis }) => {
-  if (!analysis) return null;
+  const [startupIdea, setStartupIdea] = React.useState('');
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
 
-  const marketData = [
-    { name: 'Market Size', value: analysis.marketInsights?.marketSize || 0 },
-    { name: 'Growth Rate', value: 25 },
-    { name: 'Market Share', value: 5 },
-    { name: 'Competition', value: 15 }
-  ];
-
-  const competitorData = [
-    { name: 'Direct', value: 30 },
-    { name: 'Indirect', value: 45 },
-    { name: 'Potential', value: 25 }
-  ];
-
-  const exportToPDF = () => {
-    const element = document.getElementById('analysis-dashboard');
-    const opt = {
-      margin: 1,
-      filename: 'startup-analysis.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(element).save();
+  const handleAnalyze = () => {
+    setIsAnalyzing(true);
+    // Add your analysis logic here
+    setTimeout(() => {
+      setIsAnalyzing(false);
+    }, 2000);
   };
 
-  return (
-    <Box id="analysis-dashboard" sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Startup Analysis Dashboard
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Download />}
-          onClick={exportToPDF}
-        >
-          Export PDF
-        </Button>
-      </Box>
+  const mockData = [
+    { name: 'Jan', marketSize: 4000, competitors: 2000, growthPotential: 2400 },
+    { name: 'Feb', marketSize: 3000, competitors: 1500, growthPotential: 2200 },
+    { name: 'Mar', marketSize: 2000, competitors: 9800, growthPotential: 2290 },
+    { name: 'Apr', marketSize: 2780, competitors: 3908, growthPotential: 2000 },
+    { name: 'May', marketSize: 1890, competitors: 4800, growthPotential: 2181 },
+    { name: 'Jun', marketSize: 2390, competitors: 3800, growthPotential: 2500 },
+  ];
 
-      <Grid container spacing={3}>
-        {/* Key Metrics */}
-        <Grid item xs={12}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <TrendingUp color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Market Size</Typography>
-                  </Box>
-                  <Typography variant="h4" sx={{ mt: 2 }}>
-                    {analysis.marketInsights?.marketSize || 'N/A'}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Group color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Target Users</Typography>
-                  </Box>
-                  <Typography variant="h4" sx={{ mt: 2 }}>
-                    {analysis.marketInsights?.targetSegments?.length || 0}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <AttachMoney color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Revenue Potential</Typography>
-                  </Box>
-                  <Typography variant="h4" sx={{ mt: 2 }}>High</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Warning color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Risk Level</Typography>
-                  </Box>
-                  <Typography variant="h4" sx={{ mt: 2 }}>Medium</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+  return (
+    <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 4 }}>
+      {/* Header */}
+      <Container maxWidth="lg">
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+          <RocketLaunchIcon sx={{ fontSize: 32, color: '#6366f1', mr: 1 }} />
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+            StartupLens
+          </Typography>
+        </Box>
+
+        {/* Input Section */}
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 2 }}>
+            Analyze Your Startup Idea
+          </Typography>
+          <Typography variant="h6" sx={{ color: 'text.secondary', mb: 4 }}>
+            Enter your startup idea and get comprehensive insights powered by AI
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, maxWidth: 800, mx: 'auto' }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Describe your startup idea..."
+              value={startupIdea}
+              onChange={(e) => setStartupIdea(e.target.value)}
+              sx={{
+                bgcolor: 'white',
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
+              }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleAnalyze}
+              disabled={!startupIdea || isAnalyzing}
+              sx={{
+                bgcolor: '#6366f1',
+                px: 4,
+                borderRadius: 2,
+                '&:hover': {
+                  bgcolor: '#4f46e5'
+                }
+              }}
+            >
+              {isAnalyzing ? 'Analyzing...' : 'Analyze'}
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Metrics Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <TrendingUpIcon sx={{ color: '#10b981', mr: 1 }} />
+                <Typography variant="subtitle1">Market Growth</Typography>
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#10b981' }}>
+                +24.3%
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Year over year
+              </Typography>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <GroupIcon sx={{ color: '#6366f1', mr: 1 }} />
+                <Typography variant="subtitle1">Target Users</Typography>
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#6366f1' }}>
+                2.4M
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Potential customers
+              </Typography>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <SearchIcon sx={{ color: '#8b5cf6', mr: 1 }} />
+                <Typography variant="subtitle1">Competitors</Typography>
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#8b5cf6' }}>
+                12
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Direct competitors
+              </Typography>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <AttachMoneyIcon sx={{ color: '#f59e0b', mr: 1 }} />
+                <Typography variant="subtitle1">Market Size</Typography>
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#f59e0b' }}>
+                $4.2B
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total addressable market
+              </Typography>
+            </Paper>
           </Grid>
         </Grid>
 
-        {/* Market Analysis Chart */}
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 2, height: '400px' }}>
-            <Typography variant="h6" gutterBottom>Market Analysis</Typography>
-            <ResponsiveContainer width="100%" height="90%">
-              <BarChart data={marketData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
+        {/* Market Trends Chart */}
+        <Paper sx={{ p: 3, borderRadius: 2, mb: 4, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <Typography variant="h6" sx={{ mb: 3 }}>Market Trends Analysis</Typography>
+          <Box sx={{ height: 400 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={mockData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#8884d8" />
-              </BarChart>
+                <Line
+                  type="monotone"
+                  dataKey="marketSize"
+                  stroke="#8b5cf6"
+                  name="Market Size"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="competitors"
+                  stroke="#10b981"
+                  name="Competitors"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="growthPotential"
+                  stroke="#f59e0b"
+                  name="Growth Potential"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+              </LineChart>
             </ResponsiveContainer>
-          </Paper>
-        </Grid>
+          </Box>
+        </Paper>
 
-        {/* Competitor Analysis */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 2, height: '400px' }}>
-            <Typography variant="h6" gutterBottom>Competitor Analysis</Typography>
-            <ResponsiveContainer width="100%" height="90%">
-              <PieChart>
-                <Pie
-                  data={competitorData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {competitorData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
-
-        {/* Keyword Analysis */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>Keyword Analysis</Typography>
-            <Grid container spacing={2}>
-              {Object.entries(analysis.keywordAnalysis || {}).map(([category, keywords]) => (
-                <Grid item xs={12} sm={6} md={4} key={category}>
-                  <Card>
-                    <CardContent>
-                      <Typography variant="subtitle1" color="primary">
-                        {category.replace('_', ' ').toUpperCase()}
-                      </Typography>
-                      <Box sx={{ mt: 1 }}>
-                        {keywords.map((keyword, index) => (
-                          <Typography key={index} variant="body2">
-                            • {keyword}
-                          </Typography>
-                        ))}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
+        {/* AI Insights */}
+        <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <Typography variant="h6" sx={{ mb: 3 }}>AI-Generated Insights</Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Box sx={{ p: 2, bgcolor: '#e0e7ff', borderRadius: 1 }}>
+                <Typography variant="subtitle1" sx={{ color: '#4338ca', fontWeight: 'bold', mb: 1 }}>
+                  Market Opportunity
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#4338ca' }}>
+                  Strong growth potential in the target market with increasing demand for innovative solutions.
+                </Typography>
+              </Box>
             </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Recommendations */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>Recommendations</Typography>
-            <Grid container spacing={2}>
-              {analysis.recommendations?.map((recommendation, index) => (
-                <Grid item xs={12} key={index}>
-                  <Typography variant="body1">
-                    • {recommendation}
-                  </Typography>
-                </Grid>
-              ))}
+            <Grid item xs={12}>
+              <Box sx={{ p: 2, bgcolor: '#dcfce7', borderRadius: 1 }}>
+                <Typography variant="subtitle1" sx={{ color: '#166534', fontWeight: 'bold', mb: 1 }}>
+                  Competitive Advantage
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#166534' }}>
+                  Unique value proposition with limited direct competition in the specific niche.
+                </Typography>
+              </Box>
             </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Risk Assessment */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>Risk Assessment</Typography>
-            <Grid container spacing={2}>
-              {analysis.riskAssessment?.keyRisks?.map((risk, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Card>
-                    <CardContent>
-                      <Typography variant="subtitle1" color="error">
-                        Risk {index + 1}
-                      </Typography>
-                      <Typography variant="body1">{risk}</Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
+            <Grid item xs={12}>
+              <Box sx={{ p: 2, bgcolor: '#fef3c7', borderRadius: 1 }}>
+                <Typography variant="subtitle1" sx={{ color: '#92400e', fontWeight: 'bold', mb: 1 }}>
+                  Risk Factors
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#92400e' }}>
+                  Consider regulatory compliance and initial market penetration challenges.
+                </Typography>
+              </Box>
             </Grid>
-          </Paper>
-        </Grid>
-      </Grid>
+          </Grid>
+        </Paper>
+      </Container>
     </Box>
   );
 };
