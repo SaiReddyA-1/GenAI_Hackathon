@@ -1,3 +1,7 @@
+import { functions, db } from '../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { collection, onSnapshot } from 'firebase/firestore';
+
 // Industry-specific response templates
 const templates = {
   technology: {
@@ -167,29 +171,88 @@ const detectIndustry = (idea) => {
 
 export const analyzeStartupIdea = async (idea) => {
   try {
-    console.log('Analyzing startup idea locally...');
-    
-    const detectedIndustry = detectIndustry(idea);
-    const template = templates[detectedIndustry];
+    console.log('Analyzing startup idea...');
+    const industry = detectIndustry(idea);
+    const template = templates[industry] || templates.other;
 
-    return {
-      industry: detectedIndustry,
-      targetMarket: "Analysis in progress...",
-      ...template
+    // Extract key information from the idea
+    const keywordMap = {
+      technology: ['tech', 'software', 'platform', 'app', 'digital', 'online', 'AI', 'automation'],
+      market_focus: ['B2B', 'B2C', 'enterprise', 'consumer', 'retail', 'service'],
+      innovation: ['innovative', 'unique', 'novel', 'new', 'revolutionary', 'disruptive'],
+      scalability: ['scale', 'growth', 'expand', 'global', 'market'],
+      problem_solving: ['solve', 'improve', 'enhance', 'optimize', 'streamline']
     };
+
+    const analysis = {
+      startupIdea: idea,
+      industry: industry,
+      marketInsights: {
+        marketSize: template.marketSize,
+        targetSegments: [],
+        growthPotential: 'high'
+      },
+      competitiveAnalysis: {
+        competitors: template.competitors,
+        uniqueAdvantages: [],
+        marketPosition: 'emerging'
+      },
+      riskAssessment: {
+        keyRisks: template.risks,
+        mitigationStrategies: []
+      },
+      recommendations: template.recommendations,
+      keywordAnalysis: {
+        technology: [],
+        market_focus: [],
+        innovation: [],
+        scalability: [],
+        problem_solving: []
+      }
+    };
+
+    // Analyze keywords in the idea
+    for (const [category, keywords] of Object.entries(keywordMap)) {
+      analysis.keywordAnalysis[category] = keywords.filter(keyword => 
+        idea.toLowerCase().includes(keyword.toLowerCase())
+      );
+    }
+
+    return analysis;
   } catch (error) {
     console.error('Error analyzing startup idea:', error);
-    return {
-      industry: 'unknown',
-      targetMarket: 'Could not determine target market',
-      marketSize: 'Unknown',
-      competitors: ['Analysis failed'],
-      risks: ['Could not analyze risks'],
-      strengths: ['Analysis incomplete'],
-      recommendations: ['Please try again']
-    };
+    throw error;
   }
 };
+
+// Essential questions for startup analysis
+const essentialQuestions = [
+  {
+    id: 'startup_idea',
+    question: "Describe your startup idea and the main problem it solves.",
+    type: 'text'
+  },
+  {
+    id: 'target_market',
+    question: "Who is your target market (be specific about demographics, needs, and market size)?",
+    type: 'text'
+  },
+  {
+    id: 'unique_value',
+    question: "What makes your solution unique compared to existing alternatives? List your key competitive advantages.",
+    type: 'text'
+  },
+  {
+    id: 'business_model',
+    question: "How will you make money? Describe your revenue streams and pricing strategy.",
+    type: 'text'
+  },
+  {
+    id: 'go_to_market',
+    question: "What's your go-to-market strategy and what resources (funding, team, technology) do you need to launch?",
+    type: 'text'
+  }
+];
 
 export const generateFollowUpQuestions = async (idea, industry, previousAnswers = {}) => {
   try {
@@ -200,43 +263,18 @@ export const generateFollowUpQuestions = async (idea, industry, previousAnswers 
       return { questions: [] };
     }
 
-    // Get industry-specific questions
-    const template = templates[industry] || templates.other;
-    const availableQuestions = Object.entries(template.questions);
+    // Return the next essential question
+    return {
+      questions: [essentialQuestions[currentQuestionCount]]
+    };
 
-    // Filter out questions that have already been asked
-    const remainingQuestions = availableQuestions.filter(([id]) => 
-      !Object.keys(previousAnswers).includes(id)
-    );
-
-    // Select next question based on previous answers
-    let nextQuestion;
-    if (currentQuestionCount === 0) {
-      // First question is always about the basic idea
-      nextQuestion = {
-        id: 'startup_idea',
-        question: "What's your startup idea?",
-        type: 'text'
-      };
-    } else if (remainingQuestions.length > 0) {
-      nextQuestion = {
-        id: remainingQuestions[0][0],
-        question: remainingQuestions[0][1],
-        type: 'text'
-      };
-    }
-
-    return nextQuestion ? { questions: [nextQuestion] } : { questions: [] };
   } catch (error) {
     console.error('Error generating follow-up questions:', error);
+    
+    // Use essential questions as fallback
+    const currentQuestionCount = Object.keys(previousAnswers).length;
     return {
-      questions: [
-        {
-          id: 'error',
-          question: "An error occurred. Please try again.",
-          type: 'text'
-        }
-      ]
+      questions: [essentialQuestions[currentQuestionCount]]
     };
   }
 };

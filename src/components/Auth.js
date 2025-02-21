@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Button,
   TextField,
+  Button,
   Typography,
   Paper,
-  Tab,
   Tabs,
+  Tab,
   Alert
 } from '@mui/material';
-import { signIn, signUp } from '../services/firebase';
+import { auth } from '../config/firebase';
+import { 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword 
+} from 'firebase/auth';
 
 const Auth = () => {
   const [tab, setTab] = useState(0);
@@ -25,11 +29,12 @@ const Auth = () => {
 
     try {
       if (tab === 0) {
-        await signIn(email, password);
+        await signInWithEmailAndPassword(auth, email, password);
       } else {
-        await signUp(email, password);
+        await createUserWithEmailAndPassword(auth, email, password);
       }
     } catch (error) {
+      console.error('Auth error:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -37,57 +42,59 @@ const Auth = () => {
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 4, maxWidth: 400, mx: 'auto', mt: 4 }}>
-      <Typography variant="h5" gutterBottom align="center">
-        Welcome to Startup Analyzer
-      </Typography>
-      
-      <Tabs
-        value={tab}
-        onChange={(e, newValue) => setTab(newValue)}
-        centered
-        sx={{ mb: 3 }}
-      >
-        <Tab label="Sign In" />
-        <Tab label="Sign Up" />
-      </Tabs>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      <Box component="form" onSubmit={handleSubmit}>
-        <TextField
-          fullWidth
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          margin="normal"
-          required
-        />
-        <TextField
-          fullWidth
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          margin="normal"
-          required
-        />
-        <Button
-          type="submit"
-          fullWidth
-          variant="contained"
-          sx={{ mt: 3 }}
-          disabled={loading}
-        >
+    <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h5" align="center" gutterBottom>
           {tab === 0 ? 'Sign In' : 'Sign Up'}
-        </Button>
-      </Box>
-    </Paper>
+        </Typography>
+
+        <Tabs
+          value={tab}
+          onChange={(e, newValue) => setTab(newValue)}
+          sx={{ mb: 3 }}
+          centered
+        >
+          <Tab label="Sign In" />
+          <Tab label="Sign Up" />
+        </Tabs>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            margin="normal"
+            required
+          />
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            margin="normal"
+            required
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{ mt: 3 }}
+            disabled={loading}
+          >
+            {loading ? 'Processing...' : (tab === 0 ? 'Sign In' : 'Sign Up')}
+          </Button>
+        </form>
+      </Paper>
+    </Box>
   );
 };
 

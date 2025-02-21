@@ -1,24 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Box,
   Grid,
   Paper,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Button,
-  Tab,
-  Tabs,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
+  Box,
+  Card,
+  CardContent,
+  Divider,
 } from '@mui/material';
 import {
   BarChart,
@@ -26,238 +15,229 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip as RechartsTooltip,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
-  LineChart,
-  Line,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from 'recharts';
-import { jsPDF } from 'jspdf';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import ChatIcon from '@mui/icons-material/Chat';
-import DownloadIcon from '@mui/icons-material/Download';
-import InfoIcon from '@mui/icons-material/Info';
+import html2pdf from 'html2pdf.js';
+import { 
+  TrendingUp, 
+  Group, 
+  AttachMoney, 
+  Warning,
+  Download
+} from '@mui/icons-material';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-const AnalysisDashboard = ({ data }) => {
-  const [currentTab, setCurrentTab] = useState(0);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [selectedMetric, setSelectedMetric] = useState(null);
+const AnalysisDashboard = ({ analysis }) => {
+  if (!analysis) return null;
 
-  const handleExport = () => {
-    const doc = new jsPDF();
-    doc.text('Startup Analysis Report', 20, 20);
-    doc.text(`Startup Idea: ${data.startupIdea}`, 20, 30);
-    doc.text(`Industry: ${data.industry}`, 20, 40);
-    doc.text(`Target Market: ${data.targetMarket}`, 20, 50);
-    doc.text(`Market Size: $${(data.marketInsights.marketSize / 1000000).toFixed(1)}M`, 20, 60);
-    doc.save('startup-analysis.pdf');
+  const marketData = [
+    { name: 'Market Size', value: analysis.marketInsights?.marketSize || 0 },
+    { name: 'Growth Rate', value: 25 },
+    { name: 'Market Share', value: 5 },
+    { name: 'Competition', value: 15 }
+  ];
+
+  const competitorData = [
+    { name: 'Direct', value: 30 },
+    { name: 'Indirect', value: 45 },
+    { name: 'Potential', value: 25 }
+  ];
+
+  const exportToPDF = () => {
+    const element = document.getElementById('analysis-dashboard');
+    const opt = {
+      margin: 1,
+      filename: 'startup-analysis.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
   };
-
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    // TODO: Implement bookmark functionality with Firebase
-  };
-
-  const handleMetricClick = (metric) => {
-    setSelectedMetric(metric);
-  };
-
-  const renderMarketMetrics = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={6}>
-        <Paper sx={{ p: 3, height: '100%' }}>
-          <Typography variant="h6" gutterBottom>
-            Market Size & Growth
-          </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data.marketInsights.growthData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" />
-              <YAxis />
-              <RechartsTooltip />
-              <Bar dataKey="value" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Paper sx={{ p: 3, height: '100%' }}>
-          <Typography variant="h6" gutterBottom>
-            Market Share Distribution
-          </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={data.competitorData}
-                dataKey="share"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                label
-              >
-                {data.competitorData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <RechartsTooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </Paper>
-      </Grid>
-    </Grid>
-  );
-
-  const renderCompetitorAnalysis = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Competitor Analysis
-          </Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Competitor</TableCell>
-                  <TableCell>Market Share</TableCell>
-                  <TableCell>Strengths</TableCell>
-                  <TableCell>Weaknesses</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {data.competitorData.map((competitor) => (
-                  <TableRow key={competitor.name}>
-                    <TableCell>{competitor.name}</TableCell>
-                    <TableCell>{competitor.share}%</TableCell>
-                    <TableCell>{competitor.strengths.join(', ')}</TableCell>
-                    <TableCell>{competitor.weaknesses.join(', ')}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-      </Grid>
-    </Grid>
-  );
-
-  const renderFinancialInsights = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={6}>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Revenue Projections
-          </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data.marketInsights.revenueProjections}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" />
-              <YAxis />
-              <RechartsTooltip />
-              <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
-            </LineChart>
-          </ResponsiveContainer>
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Risk Assessment
-          </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <RadarChart data={data.marketInsights.risks}>
-              <PolarGrid />
-              <PolarAngleAxis dataKey="category" />
-              <PolarRadiusAxis angle={30} domain={[0, 1]} />
-              <Radar dataKey="value" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-            </RadarChart>
-          </ResponsiveContainer>
-        </Paper>
-      </Grid>
-    </Grid>
-  );
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h4">
-            Analysis Results
-          </Typography>
-          <Box>
-            <Tooltip title="Chat with AI Assistant">
-              <IconButton onClick={() => setChatOpen(true)}>
-                <ChatIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={isBookmarked ? "Remove Bookmark" : "Bookmark Analysis"}>
-              <IconButton onClick={handleBookmark}>
-                {isBookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Export as PDF">
-              <IconButton onClick={handleExport}>
-                <DownloadIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </Box>
-        <Typography variant="body1" color="text.secondary">
-          {data.startupIdea}
+    <Box id="analysis-dashboard" sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Startup Analysis Dashboard
         </Typography>
-      </Paper>
+        <Button
+          variant="contained"
+          startIcon={<Download />}
+          onClick={exportToPDF}
+        >
+          Export PDF
+        </Button>
+      </Box>
 
-      <Tabs
-        value={currentTab}
-        onChange={(e, newValue) => setCurrentTab(newValue)}
-        sx={{ mb: 3 }}
-      >
-        <Tab label="Market Metrics" />
-        <Tab label="Competitor Analysis" />
-        <Tab label="Financial Insights" />
-      </Tabs>
+      <Grid container spacing={3}>
+        {/* Key Metrics */}
+        <Grid item xs={12}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <TrendingUp color="primary" sx={{ mr: 1 }} />
+                    <Typography variant="h6">Market Size</Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ mt: 2 }}>
+                    {analysis.marketInsights?.marketSize || 'N/A'}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Group color="primary" sx={{ mr: 1 }} />
+                    <Typography variant="h6">Target Users</Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ mt: 2 }}>
+                    {analysis.marketInsights?.targetSegments?.length || 0}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <AttachMoney color="primary" sx={{ mr: 1 }} />
+                    <Typography variant="h6">Revenue Potential</Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ mt: 2 }}>High</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Warning color="primary" sx={{ mr: 1 }} />
+                    <Typography variant="h6">Risk Level</Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ mt: 2 }}>Medium</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Grid>
 
-      {currentTab === 0 && renderMarketMetrics()}
-      {currentTab === 1 && renderCompetitorAnalysis()}
-      {currentTab === 2 && renderFinancialInsights()}
+        {/* Market Analysis Chart */}
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ p: 2, height: '400px' }}>
+            <Typography variant="h6" gutterBottom>Market Analysis</Typography>
+            <ResponsiveContainer width="100%" height="90%">
+              <BarChart data={marketData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
 
-      <Dialog open={chatOpen} onClose={() => setChatOpen(false)}>
-        <DialogTitle>AI Assistant</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Ask questions about your analysis results and get AI-powered insights.
-          </Typography>
-          {/* TODO: Implement chat interface */}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setChatOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+        {/* Competitor Analysis */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, height: '400px' }}>
+            <Typography variant="h6" gutterBottom>Competitor Analysis</Typography>
+            <ResponsiveContainer width="100%" height="90%">
+              <PieChart>
+                <Pie
+                  data={competitorData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {competitorData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
 
-      <Dialog
-        open={Boolean(selectedMetric)}
-        onClose={() => setSelectedMetric(null)}
-      >
-        <DialogTitle>{selectedMetric?.title}</DialogTitle>
-        <DialogContent>
-          <Typography>{selectedMetric?.description}</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSelectedMetric(null)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+        {/* Keyword Analysis */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>Keyword Analysis</Typography>
+            <Grid container spacing={2}>
+              {Object.entries(analysis.keywordAnalysis || {}).map(([category, keywords]) => (
+                <Grid item xs={12} sm={6} md={4} key={category}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle1" color="primary">
+                        {category.replace('_', ' ').toUpperCase()}
+                      </Typography>
+                      <Box sx={{ mt: 1 }}>
+                        {keywords.map((keyword, index) => (
+                          <Typography key={index} variant="body2">
+                            • {keyword}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        </Grid>
+
+        {/* Recommendations */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>Recommendations</Typography>
+            <Grid container spacing={2}>
+              {analysis.recommendations?.map((recommendation, index) => (
+                <Grid item xs={12} key={index}>
+                  <Typography variant="body1">
+                    • {recommendation}
+                  </Typography>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        </Grid>
+
+        {/* Risk Assessment */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>Risk Assessment</Typography>
+            <Grid container spacing={2}>
+              {analysis.riskAssessment?.keyRisks?.map((risk, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle1" color="error">
+                        Risk {index + 1}
+                      </Typography>
+                      <Typography variant="body1">{risk}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
