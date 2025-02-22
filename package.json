@@ -10,7 +10,7 @@
     "@google/generative-ai": "^0.22.0",
     "@mui/icons-material": "^5.16.14",
     "@mui/lab": "^5.0.0-alpha.155",
-    "@mui/material": "^5.13.0",
+    "@mui/material": "^5.16.14",
     "@mui/x-charts": "^7.27.0",
     "axios": "^1.4.0",
     "chart.js": "^4.4.8",
