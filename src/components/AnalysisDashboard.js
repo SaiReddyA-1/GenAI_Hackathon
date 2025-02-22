@@ -256,129 +256,96 @@ const AnalysisDashboard = ({ analysis }) => {
           </Grid>
         </Grid>
 
-        {/* Charts Section */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={4}>
-            <Paper
-              sx={{
-                p: 3,
-                height: '100%',
-                bgcolor: '#fff',
-                borderRadius: 2,
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-              }}
-            >
-              <Box sx={{ height: 300 }}>
-                <MarketGrowthChart data={marketTrends} />
-              </Box>
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Paper
-              sx={{
-                p: 3,
-                height: '100%',
-                bgcolor: '#fff',
-                borderRadius: 2,
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-              }}
-            >
-              <Box sx={{ height: 300 }}>
-                <MarketShareChart data={competitorAnalysis} />
-              </Box>
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Paper
-              sx={{
-                p: 3,
-                height: '100%',
-                bgcolor: '#fff',
-                borderRadius: 2,
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-              }}
-            >
-              <Box sx={{ height: 300 }}>
-                <CompetitorChart data={competitorAnalysis} />
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Market Trends Chart */}
+        {/* Market Analysis Section - Combining Graphs with Insights */}
         <Grid container spacing={4}>
-          <Grid item xs={12} md={8}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Revenue & Growth Projections</Typography>
-            <Box sx={{ height: 300, width: '100%' }}>
-              <ResponsiveContainer>
-                <LineChart data={marketTrends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#8b5cf6"
-                    name="Revenue"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="userBase"
-                    stroke="#10b981"
-                    name="User Base"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </Box>
+          {/* Market Growth and Trends */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', mb: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Market Growth & Trends</Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={8}>
+                  <Box sx={{ height: 300 }}>
+                    <MarketGrowthChart data={marketTrends} />
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ p: 2, bgcolor: '#e0e7ff', borderRadius: 1, height: '100%' }}>
+                    <Typography variant="subtitle1" sx={{ color: '#4338ca', fontWeight: 'bold', mb: 1 }}>
+                      Market Insights
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#4338ca' }}>
+                      {marketAnalysis.trendAnalysis}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Competitor Analysis</Typography>
-            <Box sx={{ height: 300, width: '100%' }}>
-              <ResponsiveContainer>
-                <RadarChart data={competitorAnalysis.competitors}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="name" />
-                  <PolarRadiusAxis />
-                  <Radar
-                    name="Score"
-                    dataKey="scores"
-                    stroke="#8b5cf6"
-                    fill="#8b5cf6"
-                    fillOpacity={0.6}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </Box>
+          {/* Market Share and Competition */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', mb: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Market Share & Competition</Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ height: 300 }}>
+                    <MarketShareChart data={competitorAnalysis} />
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ height: 300 }}>
+                    <CompetitorChart data={competitorAnalysis} />
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ p: 2, bgcolor: '#dcfce7', borderRadius: 1, height: '100%' }}>
+                    <Typography variant="subtitle1" sx={{ color: '#166534', fontWeight: 'bold', mb: 1 }}>
+                      Competition Analysis
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#166534' }}>
+                      {competitorAnalysis.insights}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Financial Projections */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, bgcolor: '#fff', borderRadius: 2, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Financial Analysis</Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={8}>
+                  <Box sx={{ height: 300 }}>
+                    <ResponsiveContainer>
+                      <BarChart data={financialProjections.projectionCharts.financial}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="revenue" fill="#10b981" name="Revenue" />
+                        <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
+                        <Bar dataKey="profit" fill="#8b5cf6" name="Profit" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ p: 2, bgcolor: '#fef3c7', borderRadius: 1, height: '100%' }}>
+                    <Typography variant="subtitle1" sx={{ color: '#92400e', fontWeight: 'bold', mb: 1 }}>
+                      Financial Insights
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#92400e' }}>
+                      {financialProjections.insights}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
           </Grid>
         </Grid>
-
-        {/* Financial Projections */}
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Financial Projections</Typography>
-          <Box sx={{ height: 300, width: '100%' }}>
-            <ResponsiveContainer>
-              <BarChart data={financialProjections.projectionCharts.financial}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="revenue" fill="#10b981" name="Revenue" />
-                <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
-                <Bar dataKey="profit" fill="#8b5cf6" name="Profit" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Box>
-        </Box>
 
         {/* AI Insights */}
         <Box sx={{ mt: 4 }}>

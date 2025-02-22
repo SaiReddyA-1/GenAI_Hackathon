@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaMoon, FaSun, FaSignOutAlt } from 'react-icons/fa';
+import { FaSignOutAlt } from 'react-icons/fa';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import useAuth from '../hooks/useAuth';
@@ -79,26 +79,8 @@ const NavbarWrapper = () => {
           <Link to="/blog" className="nav-link" style={!isLandingPage ? {
             color: isDarkMode ? '#ffffff' : '#000000'
           } : {}}>Blog</Link>
-          <button 
-            className="theme-toggle"
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            style={!isLandingPage ? {
-              color: isDarkMode ? '#ffffff' : '#000000',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px'
-            } : {}}
-          >
-            {isDarkMode ? <FaSun /> : <FaMoon />}
-          </button>
           {user ? (
             <>
-              <span className="user-name" style={!isLandingPage ? {
-                color: isDarkMode ? '#ffffff' : '#000000'
-              } : {}}>
-                {user.email}
-              </span>
               <button 
                 className="sign-out-btn" 
                 onClick={handleSignOut}

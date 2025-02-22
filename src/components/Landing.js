@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaMoon, FaSun, FaArrowRight, FaCheck, FaRocket, FaChartLine, FaRobot, FaSignOutAlt, FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { db } from '../config/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import useAuth from '../hooks/useAuth';
 import StarRating from './StarRating';
 import '../styles/Landing.css';
@@ -17,27 +19,30 @@ const Landing = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeService, setActiveService] = useState('big-data');
+  const [activeService, setActiveService] = useState('machine-learning');
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [submitStatus, setSubmitStatus] = useState({
+    isSubmitting: false,
+    message: '',
+    isError: false
+  });
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Refs for smooth scrolling
+  const aboutRef = useRef(null);
+  const howItWorksRef = useRef(null);
+  const servicesRef = useRef(null);
+  const testimonialsRef = useRef(null);
+  const contactRef = useRef(null);
 
-  const services = {
-    'big-data': {
-      title: 'At Vero Eos Et Accusamus Et Iusto Odi',
-      description: 'There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don\'t look even slightly believable.'
-    },
-    'machine-learning': {
-      title: 'Machine Learning Excellence',
-      description: 'Advanced algorithms and neural networks that learn and adapt from data patterns, providing intelligent solutions for complex problems.'
-    },
-    'analytical-ai': {
-      title: 'Analytical AI Solutions',
-      description: 'Cutting-edge artificial intelligence systems that analyze and interpret data, delivering actionable insights for your business.'
-    },
-    'computer-vision': {
-      title: 'Et Harum Quidem Rerum Facilis',
-      description: 'There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don\'t look even slightly believable.'
-    }
+  const scrollToSection = (ref) => (e) => {
+    e.preventDefault();
+    ref.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -74,6 +79,46 @@ const Landing = () => {
     }
   };
 
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitStatus({ isSubmitting: true, message: '', isError: false });
+
+    try {
+      // Add to Firebase
+      const contactsRef = collection(db, 'contacts');
+      await addDoc(contactsRef, {
+        ...contactForm,
+        timestamp: serverTimestamp()
+      });
+
+      // Show success message
+      setSubmitStatus({
+        isSubmitting: false,
+        message: 'Thank you for your message! We will get back to you soon.',
+        isError: false
+      });
+
+      // Reset form
+      setContactForm({ name: '', email: '', message: '' });
+
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      setSubmitStatus({
+        isSubmitting: false,
+        message: 'Sorry, there was an error sending your message. Please try again.',
+        isError: true
+      });
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setContactForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
     <div className="landing">
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
@@ -83,18 +128,13 @@ const Landing = () => {
           </Link>
           <div className="nav-links">
             <Link to="/" className="nav-link">Home</Link>
-            <Link to="/pages" className="nav-link">Pages</Link>
-            <Link to="/forum" className="nav-link">Forum</Link>
-            <Link to="/blog" className="nav-link">Blog</Link>
-            <button 
-              className="theme-toggle"
-              onClick={() => setIsDarkMode(!isDarkMode)}
-            >
-              {isDarkMode ? <FaSun /> : <FaMoon />}
-            </button>
+            <a href="#about" onClick={scrollToSection(aboutRef)} className="nav-link">About</a>
+            <a href="#how-it-works" onClick={scrollToSection(howItWorksRef)} className="nav-link">How It Works</a>
+            <a href="#services" onClick={scrollToSection(servicesRef)} className="nav-link">Services</a>
+            <a href="#testimonials" onClick={scrollToSection(testimonialsRef)} className="nav-link">Testimonials</a>
+            <a href="#contact" onClick={scrollToSection(contactRef)} className="nav-link">Contact</a>
             {user ? (
               <>
-                <span className="user-name">{user.email}</span>
                 <button className="sign-out-btn" onClick={handleSignOut}>
                   <FaSignOutAlt /> Sign Out
                 </button>
@@ -137,7 +177,7 @@ const Landing = () => {
       </section>
 
       {/* About Section */}
-      <section className="about">
+      <section className="about" ref={aboutRef} id="about">
         <div className="about-content">
           <div className="about-illustration">
             <img src={aboutIllustration} alt="Smart City Analytics" />
@@ -188,7 +228,7 @@ const Landing = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="how-it-works">
+      <section className="how-it-works" ref={howItWorksRef} id="how-it-works">
         <div className="how-it-works-content">
           <div className="section-label">HOW DOES IT WORK</div>
           <h2>Your Journey to Startup Success</h2>
@@ -225,19 +265,12 @@ const Landing = () => {
       </section>
 
       {/* Services Section */}
-      <section className="services">
+      <section className="services" ref={servicesRef} id="services">
         <div className="services-content">
           <div className="section-label">OUR SERVICES</div>
           <h2>Explore Our Data Services</h2>
           
           <div className="services-tabs">
-            <div 
-              className={`service-tab ${activeService === 'big-data' ? 'active' : ''}`}
-              onClick={() => setActiveService('big-data')}
-            >
-              <div className="service-icon big-data"></div>
-              <span>Big Data</span>
-            </div>
             <div 
               className={`service-tab ${activeService === 'machine-learning' ? 'active' : ''}`}
               onClick={() => setActiveService('machine-learning')}
@@ -260,62 +293,11 @@ const Landing = () => {
               <span>Computer Vision</span>
             </div>
           </div>
-
-          <div className="service-content">
-            <div className="service-info">
-              <h3>{services[activeService].title}</h3>
-              <p>{services[activeService].description}</p>
-              <div className="service-features">
-                <div className="feature">
-                  <FaCheck className="check-icon" />
-                  <span>Advance Advisory Team</span>
-                </div>
-                <div className="feature">
-                  <FaCheck className="check-icon" />
-                  <span>24/7 Support Help Center</span>
-                </div>
-                <div className="feature">
-                  <FaCheck className="check-icon" />
-                  <span>Professional Consulting Services</span>
-                </div>
-                <div className="feature">
-                  <FaCheck className="check-icon" />
-                  <span>Customer Service Operations</span>
-                </div>
-              </div>
-              <button className="all-services-btn">ALL SERVICES</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="features">
-        <div className="section-header">
-          <h2>Why Choose StartupLens</h2>
-          <p>Make data-driven decisions with our comprehensive startup analysis tools</p>
-        </div>
-        <div className="features-grid">
-          <div className="feature-card">
-            <FaRocket className="feature-icon" />
-            <h3>Smart Analysis</h3>
-            <p>Dynamic question flow adapts to your startup idea for targeted insights</p>
-          </div>
-          <div className="feature-card">
-            <FaChartLine className="feature-icon" />
-            <h3>Market Intelligence</h3>
-            <p>Real-time market trends, competitor analysis, and funding insights</p>
-          </div>
-          <div className="feature-card">
-            <FaRobot className="feature-icon" />
-            <h3>AI Assistant</h3>
-            <p>Get personalized recommendations and answers to your questions</p>
-          </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="testimonials">
+      <section className="testimonials" ref={testimonialsRef} id="testimonials">
         <div className="testimonials-content">
           <div className="section-label">TESTIMONIALS</div>
           <h2>What Founders Say</h2>
@@ -347,6 +329,87 @@ const Landing = () => {
                 <h4>Sarah Williams</h4>
                 <span>Startup Founder</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="contact" ref={contactRef} id="contact">
+        <div className="contact-content">
+          <div className="section-label">GET IN TOUCH</div>
+          <h2>Contact Us</h2>
+          
+          <div className="contact-grid">
+            <div className="contact-info">
+              <div className="contact-card">
+                <div className="contact-icon">
+                  <FaEnvelope />
+                </div>
+                <div className="contact-details">
+                  <h3>Email Us</h3>
+                  <p>info@startuplens.com</p>
+                </div>
+              </div>
+              
+              <div className="contact-card">
+                <div className="contact-icon">
+                  <FaLinkedin />
+                </div>
+                <div className="contact-details">
+                  <h3>Connect on LinkedIn</h3>
+                  <p>linkedin.com/company/startuplens</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="contact-form-container">
+              <form className="contact-form" onSubmit={handleContactSubmit}>
+                <div className="form-group">
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Your Name"
+                    name="name"
+                    value={contactForm.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <input
+                    type="email"
+                    className="form-input"
+                    placeholder="Your Email"
+                    name="email"
+                    value={contactForm.email}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <textarea
+                    className="form-input"
+                    placeholder="Your Message"
+                    name="message"
+                    value={contactForm.message}
+                    onChange={handleInputChange}
+                    required
+                  ></textarea>
+                </div>
+                <button 
+                  type="submit" 
+                  className="submit-btn"
+                  disabled={submitStatus.isSubmitting}
+                >
+                  {submitStatus.isSubmitting ? 'Sending...' : 'Send Message'}
+                </button>
+                {submitStatus.message && (
+                  <div className={`submit-status ${submitStatus.isError ? 'error' : 'success'}`}>
+                    {submitStatus.message}
+                  </div>
+                )}
+              </form>
             </div>
           </div>
         </div>
