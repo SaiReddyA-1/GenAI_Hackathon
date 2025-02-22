@@ -310,8 +310,8 @@ const Landing = () => {
                 StartupLens helped me validate my SaaS idea with real market data. The AI-driven insights saved me months of research and helped identify key opportunities.
               </p>
               <div className="client-info">
-                <h4>David Chen</h4>
-                <span>Tech Founder</span>
+                <h4>Suresh Timma</h4>
+                <span>Head Tech Team and Research</span>
               </div>
             </div>
 
@@ -324,8 +324,8 @@ const Landing = () => {
                 The interactive charts and competitor analysis gave me a clear picture of my market position. I now have a solid strategy backed by data.
               </p>
               <div className="client-info">
-                <h4>Sarah Williams</h4>
-                <span>Startup Founder</span>
+                <h4>Hrushikesh Gangusetty </h4>
+                <span>Outreach and Ideation</span>
               </div>
             </div>
 
@@ -338,8 +338,8 @@ const Landing = () => {
                 As a first-time founder, StartupLens was invaluable. The AI recommendations helped me pivot my business model and find the perfect market fit. Highly recommended!
               </p>
               <div className="client-info">
-                <h4>Emily Rodriguez</h4>
-                <span>E-commerce Founder</span>
+                <h4>Prasanth Velaga</h4>
+                <span>Design and Ideation and research</span>
               </div>
             </div>
           </div>
