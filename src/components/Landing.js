@@ -440,26 +440,30 @@ const Landing = () => {
             </div>
           </div>
           <div className="footer-section">
-            <h4>Product</h4>
+            <h4>Navigation</h4>
             <ul className="footer-links">
-              <li><a href="#features">Features</a></li>
-              <li><a href="#testimonials">Testimonials</a></li>
+              <li><Link to="/">Home</Link></li>
+              <li><a href="#about" onClick={scrollToSection(aboutRef)}>About</a></li>
+              <li><a href="#how-it-works" onClick={scrollToSection(howItWorksRef)}>How It Works</a></li>
+              <li><a href="#services" onClick={scrollToSection(servicesRef)}>Services</a></li>
+              <li><a href="#testimonials" onClick={scrollToSection(testimonialsRef)}>Testimonials</a></li>
+              <li><a href="#contact" onClick={scrollToSection(contactRef)}>Contact</a></li>
             </ul>
           </div>
           <div className="footer-section">
-            <h4>Company</h4>
+            <h4>Legal</h4>
             <ul className="footer-links">
-              <li><a href="#about">About Us</a></li>
-              <li><a href="#careers">Careers</a></li>
-              <li><a href="#blog">Blog</a></li>
-            </ul>
-          </div>
-          <div className="footer-section">
-            <h4>Support</h4>
-            <ul className="footer-links">
-              <li><a href="#help">Help Center</a></li>
-              <li><a href="#contact">Contact Us</a></li>
+              <li><a href="#terms">Terms of Service</a></li>
               <li><a href="#privacy">Privacy Policy</a></li>
+              <li><a href="#cookies">Cookie Policy</a></li>
+            </ul>
+          </div>
+          <div className="footer-section">
+            <h4>Contact</h4>
+            <ul className="footer-links">
+              <li><a href="mailto:contact@startuplens.com">contact@startuplens.com</a></li>
+              <li><a href="tel:+1234567890">+1 (234) 567-890</a></li>
+              <li><a href="#help">Help Center</a></li>
             </ul>
           </div>
         </div>

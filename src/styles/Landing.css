@@ -1033,65 +1033,91 @@ textarea.form-input {
 /* Footer */
 .footer {
     padding: 60px 20px;
-    background: white;
-    border-top: 1px solid #eef2f6;
-    margin-top: auto;
+    background: #f8f9ff;
+    border-top: 1px solid rgba(74, 123, 255, 0.1);
 }
 
 .footer-content {
     max-width: 1200px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
     gap: 40px;
 }
 
 .footer-section h4 {
     font-size: 1.2rem;
     margin-bottom: 20px;
-    color: var(--bg-100);
+    color: #2d3958;
     font-weight: 600;
 }
 
 .footer-section p {
-    color: var(--bg-200);
+    color: #6b7894;
     margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.social-links {
+    display: flex;
+    gap: 16px;
+}
+
+.social-links a {
+    color: #4A7BFF;
+    font-size: 1.25rem;
+    transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+    color: #2d3958;
 }
 
 .footer-links {
     list-style: none;
     padding: 0;
-    margin: 0;
 }
 
 .footer-links li {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .footer-links a {
-    color: var(--bg-200);
+    color: #6b7894;
     text-decoration: none;
+    font-size: 0.95rem;
     transition: color 0.3s ease;
 }
 
 .footer-links a:hover {
-    color: var(--primary-100);
+    color: #4A7BFF;
 }
 
-.social-links {
-    display: flex;
-    gap: 15px;
+@media (max-width: 1024px) {
+    .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
 }
 
-.social-links a {
-    color: var(--bg-200);
-    font-size: 1.5rem;
-    transition: all 0.3s ease;
-}
+@media (max-width: 768px) {
+    .footer {
+        padding: 40px 20px;
+    }
 
-.social-links a:hover {
-    color: var(--primary-100);
-    transform: translateY(-2px);
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        text-align: center;
+    }
+
+    .social-links {
+        justify-content: center;
+    }
+
+    .footer-links {
+        margin: 0 auto;
+    }
 }
 
 /* Responsive Design */
