@@ -22,10 +22,13 @@ import {
   InputAdornment,
   IconButton,
   Tooltip,
+  Paper,
+  Divider,
 } from '@mui/material';
 import { db } from '../config/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { analyzeStartupIdea } from '../services/openai';
+import { getCompetitorsWithGemini, getStartupInsightsWithGemini } from '../services/gemini';
 import useAuth from '../hooks/useAuth';
 import AnalysisDashboard from './AnalysisDashboard';
 
@@ -87,116 +90,305 @@ const MARKET_TRENDS = [
   'Other'
 ];
 
-// Sample test data for quick form filling
 const SAMPLE_DATA = {
-  // Basic Startup Info
   startupIdea: "AI-powered health monitoring wearable that predicts potential health issues before they become serious. The device uses advanced machine learning to analyze real-time health data and provides early warnings for various medical conditions.",
   industry: 'Healthcare',
   problemSolution: "Traditional health monitoring is reactive rather than proactive. Our solution uses AI to predict health issues days or weeks before symptoms appear, potentially saving lives through early intervention.",
-
-  // Market & Competition
   operationLocation: 'Global, starting with US and Europe',
   targetUsers: 'Consumers',
   hasCompetitors: 'yes',
   competitors: 'Apple Health, Fitbit, Samsung Health',
   userAcquisition: 'Partnerships',
-
-  // Financial & Growth
   needFunding: 'yes',
   initialInvestment: '5000000',
   businessModel: 'Subscription',
   revenuePerUser: '29.99',
   breakEvenTime: '2 years',
-
-  // Growth & Market
   marketSize: 'Large',
   userGrowthRate: '45',
   supportingTrends: ['AI Boom', 'Digital Payments'],
-
-  // AI & Reports
   needAiStrategies: 'yes',
   needBenchmarking: 'yes',
   needPdfReport: 'yes'
 };
 
+const STEPS = [
+  'Basic Info',
+  'Market & Competition',
+  'Financial & Growth',
+  'AI & Reports',
+  'Competitors'
+];
+
 const StartupForm = () => {
-  const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [errors, setErrors] = useState({});
+  const [loadingStage, setLoadingStage] = useState('');
   const [error, setError] = useState('');
   const [analysis, setAnalysis] = useState(null);
-  const [formErrors, setFormErrors] = useState({});
+  const [competitors, setCompetitors] = useState([]); 
+  const [insights, setInsights] = useState(null);
+  const { user } = useAuth();
 
-  const [formData, setFormData] = useState({
-    // Basic Startup Info
-    startupIdea: '',
-    industry: '',
-    problemSolution: '',
+  const renderBasicInfo = () => (
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          label="Startup Idea"
+          multiline
+          rows={4}
+          value={formData.startupIdea || ''}
+          onChange={(e) => handleFormChange('startupIdea', e.target.value)}
+          error={!!errors.startupIdea}
+          helperText={errors.startupIdea}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <FormControl fullWidth error={!!errors.industry}>
+          <InputLabel>Industry</InputLabel>
+          <Select
+            value={formData.industry || ''}
+            onChange={(e) => handleFormChange('industry', e.target.value)}
+            label="Industry"
+          >
+            {INDUSTRIES.map((industry) => (
+              <MenuItem key={industry} value={industry}>{industry}</MenuItem>
+            ))}
+          </Select>
+          {errors.industry && <FormHelperText>{errors.industry}</FormHelperText>}
+        </FormControl>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          label="Problem & Solution"
+          multiline
+          rows={4}
+          value={formData.problemSolution || ''}
+          onChange={(e) => handleFormChange('problemSolution', e.target.value)}
+          error={!!errors.problemSolution}
+          helperText={errors.problemSolution}
+        />
+      </Grid>
+    </Grid>
+  );
 
-    // Market & Competition
-    operationLocation: '',
-    targetUsers: '',
-    hasCompetitors: 'no',
-    competitors: '',
-    uniqueIdea: '',
-    userAcquisition: '',
+  const renderMarketCompetition = () => (
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          label="Operation Location"
+          value={formData.operationLocation || ''}
+          onChange={(e) => handleFormChange('operationLocation', e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <InputLabel>Target Users</InputLabel>
+          <Select
+            value={formData.targetUsers || ''}
+            onChange={(e) => handleFormChange('targetUsers', e.target.value)}
+            label="Target Users"
+          >
+            {TARGET_USERS.map((user) => (
+              <MenuItem key={user} value={user}>{user}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.hasCompetitors === 'yes'}
+              onChange={(e) => handleFormChange('hasCompetitors', e.target.checked ? 'yes' : 'no')}
+            />
+          }
+          label="Do you have competitors?"
+        />
+      </Grid>
+      {formData.hasCompetitors === 'yes' && (
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Main Competitors"
+            multiline
+            rows={2}
+            value={formData.competitors || ''}
+            onChange={(e) => handleFormChange('competitors', e.target.value)}
+            helperText="Separate competitors with commas"
+          />
+        </Grid>
+      )}
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <InputLabel>User Acquisition Strategy</InputLabel>
+          <Select
+            value={formData.userAcquisition || ''}
+            onChange={(e) => handleFormChange('userAcquisition', e.target.value)}
+            label="User Acquisition Strategy"
+          >
+            {USER_ACQUISITION.map((strategy) => (
+              <MenuItem key={strategy} value={strategy}>{strategy}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+    </Grid>
+  );
 
-    // Financial & Growth
-    needFunding: 'not_sure',
-    initialInvestment: '',
-    businessModel: '',
-    revenuePerUser: '',
-    breakEvenTime: '',
+  const renderFinancialGrowth = () => (
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.needFunding === 'yes'}
+              onChange={(e) => handleFormChange('needFunding', e.target.checked ? 'yes' : 'no')}
+            />
+          }
+          label="Do you need funding?"
+        />
+      </Grid>
+      {formData.needFunding === 'yes' && (
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            type="number"
+            label="Initial Investment Needed ($)"
+            value={formData.initialInvestment || ''}
+            onChange={(e) => handleFormChange('initialInvestment', e.target.value)}
+            InputProps={{
+              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+            }}
+          />
+        </Grid>
+      )}
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <InputLabel>Business Model</InputLabel>
+          <Select
+            value={formData.businessModel || ''}
+            onChange={(e) => handleFormChange('businessModel', e.target.value)}
+            label="Business Model"
+          >
+            {BUSINESS_MODELS.map((model) => (
+              <MenuItem key={model} value={model}>{model}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          type="number"
+          label="Revenue per User ($)"
+          value={formData.revenuePerUser || ''}
+          onChange={(e) => handleFormChange('revenuePerUser', e.target.value)}
+          InputProps={{
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <InputLabel>Break-even Time</InputLabel>
+          <Select
+            value={formData.breakEvenTime || ''}
+            onChange={(e) => handleFormChange('breakEvenTime', e.target.value)}
+            label="Break-even Time"
+          >
+            {BREAKEVEN_TIMES.map((time) => (
+              <MenuItem key={time} value={time}>{time}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+    </Grid>
+  );
 
-    // Growth & Market
-    marketSize: '',
-    userGrowthRate: '',
-    supportingTrends: [],
+  const renderAIReports = () => (
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <InputLabel>Market Size</InputLabel>
+          <Select
+            value={formData.marketSize || ''}
+            onChange={(e) => handleFormChange('marketSize', e.target.value)}
+            label="Market Size"
+          >
+            {MARKET_SIZES.map((size) => (
+              <MenuItem key={size} value={size}>{size}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          type="number"
+          label="Expected User Growth Rate (%)"
+          value={formData.userGrowthRate || ''}
+          onChange={(e) => handleFormChange('userGrowthRate', e.target.value)}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">%</InputAdornment>,
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <InputLabel>Supporting Market Trends</InputLabel>
+          <Select
+            multiple
+            value={formData.supportingTrends || []}
+            onChange={(e) => handleFormChange('supportingTrends', e.target.value)}
+            label="Supporting Market Trends"
+          >
+            {MARKET_TRENDS.map((trend) => (
+              <MenuItem key={trend} value={trend}>{trend}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+    </Grid>
+  );
 
-    // AI & Reports
-    needAiStrategies: 'no',
-    needBenchmarking: 'no',
-    needPdfReport: 'no'
-  });
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const getStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return renderBasicInfo();
+      case 1:
+        return renderMarketCompetition();
+      case 2:
+        return renderFinancialGrowth();
+      case 3:
+        return renderAIReports();
+      default:
+        return null;
+    }
   };
 
-  const handleMultiSelect = (event) => {
-    const { name, value } = event.target;
-    setFormData(prev => ({
+  const handleFormChange = (field, value) => {
+    setFormData((prev) => ({
       ...prev,
-      [name]: typeof value === 'string' ? value.split(',') : value
+      [field]: value
     }));
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
   };
 
   const handleNext = () => {
-    let errors = {};
-    
-    switch (activeStep) {
-      case 0:
-        errors = validateBasicInfo(formData);
-        break;
-      case 1:
-        errors = validateMarketInfo(formData);
-        break;
-      case 2:
-        errors = validateFinancialInfo(formData);
-        break;
-      default:
-        break;
-    }
-
-    if (Object.keys(errors).length === 0) {
-      setActiveStep((prevStep) => prevStep + 1);
-      setFormErrors({});
+    if (activeStep === STEPS.length - 2) {
+      handleSubmit();
     } else {
-      setFormErrors(errors);
+      setActiveStep((prevStep) => prevStep + 1);
     }
   };
 
@@ -206,494 +398,354 @@ const StartupForm = () => {
 
   const handleSubmit = async () => {
     try {
-      setLoading(true);
-      setError('');
-
-      // Analyze the startup idea using OpenAI
-      const analysisResult = await analyzeStartupIdea(formData);
+      setLoadingStage('Fetching competitors...');
+      const competitorsList = await getCompetitorsWithGemini(formData);
       
-      if (!analysisResult) {
-        throw new Error('Failed to generate analysis');
+      if (!competitorsList || competitorsList.length === 0) {
+        throw new Error('Failed to fetch competitors');
       }
 
-      setAnalysis(analysisResult);
-
-      // Save to Firestore
-      if (user) {
-        await addDoc(collection(db, 'startupAnalysis'), {
-          ...formData,
-          analysis: analysisResult,
-          userId: user.uid,
-          timestamp: new Date().toISOString()
-        });
+      setCompetitors(competitorsList);
+      
+      setLoadingStage('Generating insights...');
+      const insightsList = await getStartupInsightsWithGemini(formData);
+      
+      if (!insightsList) {
+        throw new Error('Failed to generate insights');
       }
 
-      // Move to analysis step
-      setActiveStep(STEPS.length);
+      setInsights(insightsList);
+      setLoadingStage('');
+      setActiveStep(activeStep + 1);
+
     } catch (err) {
       console.error('Analysis error:', err);
       setError(err.message || 'Failed to analyze startup idea. Please try again.');
-    } finally {
-      setLoading(false);
+      setLoadingStage('');
     }
   };
 
-  // Function to fill form with sample data
-  const fillWithSampleData = () => {
-    setFormData(SAMPLE_DATA);
+  const renderInsightsCard = (title, data, icon) => {
+    if (!data) return null;
+
+    const renderContent = (content) => {
+      if (typeof content === 'string') {
+        return <p className="text-gray-600">{content}</p>;
+      }
+      
+      if (Array.isArray(content)) {
+        return (
+          <ul className="list-disc pl-5">
+            {content.map((item, index) => (
+              <li key={index} className="text-gray-600 mb-2">{item}</li>
+            ))}
+          </ul>
+        );
+      }
+
+      if (typeof content === 'object') {
+        return Object.entries(content).map(([subTitle, subContent], index) => (
+          <div key={index} className="mb-4">
+            <h4 className="text-lg font-semibold mb-2">{subTitle}</h4>
+            {renderContent(subContent)}
+          </div>
+        ));
+      }
+
+      return null;
+    };
+
+    return (
+      <Paper 
+        sx={{ 
+          p: 3, 
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: 'background.paper',
+          boxShadow: 3
+        }}
+      >
+        <Typography variant="h6" color="primary" gutterBottom>
+          {title}
+        </Typography>
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle1" color="text.secondary">
+            Summary
+          </Typography>
+          <Typography variant="body1">
+            {renderContent(data)}
+          </Typography>
+        </Box>
+      </Paper>
+    );
   };
 
-  // Validation helper functions
-  const validateBasicInfo = (data) => {
-    const errors = {};
-    if (!data.startupIdea?.trim()) errors.startupIdea = 'Startup idea is required';
-    if (!data.industry) errors.industry = 'Industry is required';
-    if (!data.problemSolution?.trim()) errors.problemSolution = 'Problem & solution is required';
-    if (data.problemSolution?.length < 50) errors.problemSolution = 'Problem & solution should be at least 50 characters';
-    return errors;
+  const renderStartupInsights = () => {
+    if (!insights) return null;
+
+    return (
+      <div className="container mx-auto p-6">
+        <h1 className="text-3xl font-bold text-center mb-8">Startup Insights Analysis</h1>
+        
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {renderInsightsCard("Risks & Solutions", {
+            "Key Risks": insights.risks?.potential_risks || [],
+            "Solutions": insights.risks?.solutions || []
+          }, "🛡️")}
+          
+          {renderInsightsCard("Market Analysis", {
+            "Current Growth Rate": insights.marketAnalysis?.current_growth_rate,
+            "Market Trends": insights.marketAnalysis?.key_market_trends || [],
+            "Projected Growth": insights.marketAnalysis?.projected_growth
+          }, "📈")}
+          
+          {renderInsightsCard("Audience & Marketing", {
+            "Target Audience": insights.audienceAndMarketing?.target_audience,
+            "Marketing Strategy": insights.audienceAndMarketing?.marketing_strategies || [],
+            "Investor Appeal": insights.audienceAndMarketing?.investor_appeal_points || []
+          }, "🎯")}
+          
+          {renderInsightsCard("Revenue Streams", {
+            "Primary Revenue": insights.revenueStreams?.primary_revenue_sources || [],
+            "Passive Income": insights.revenueStreams?.passive_income_opportunities || [],
+            "Capital Raising": insights.revenueStreams?.capital_raising_strategies || []
+          }, "💰")}
+          
+          {renderInsightsCard("Suggested Names", 
+            insights.startupNames?.suggested_modern_names || [], 
+            "✨")}
+        </div>
+      </div>
+    );
   };
 
-  const validateMarketInfo = (data) => {
-    const errors = {};
-    if (!data.operationLocation?.trim()) errors.operationLocation = 'Operation location is required';
-    if (!data.targetUsers) errors.targetUsers = 'Target users is required';
-    if (!data.userAcquisition) errors.userAcquisition = 'User acquisition strategy is required';
-    return errors;
+  const renderCompetitorsStep = () => {
+    if (loadingStage) {
+      return (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <CircularProgress />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            {loadingStage}
+          </Typography>
+        </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      );
+    }
+
+    return (
+      <>
+        <Box sx={{ py: 4 }}>
+          <Typography variant="h5" align="center" gutterBottom>
+            Top Competitors Analysis
+          </Typography>
+          <Grid container spacing={3} sx={{ mt: 2 }}>
+            {competitors.map((competitor, index) => (
+              <Grid item xs={12} md={4} key={index}>
+                <Paper 
+                  sx={{ 
+                    p: 3, 
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    backgroundColor: 'background.paper',
+                    boxShadow: 3
+                  }}
+                >
+                  <Typography variant="h6" color="primary" gutterBottom>
+                    {competitor.name}
+                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1" color="text.secondary">
+                      Market Share
+                    </Typography>
+                    <Typography variant="body1">
+                      {competitor.marketShare}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1" color="text.secondary">
+                      Target Audience
+                    </Typography>
+                    <Typography variant="body1">
+                      {competitor.targetAudience}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1" color="text.secondary">
+                      Marketing Strategies
+                    </Typography>
+                    <Typography variant="body1">
+                      {competitor.marketingStrategies}
+                    </Typography>
+                  </Box>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+        {renderStartupInsights()}
+      </>
+    );
   };
 
-  const validateFinancialInfo = (data) => {
-    const errors = {};
-    if (!data.needFunding || data.needFunding === 'not_sure') {
-      errors.needFunding = 'Please select if you need funding';
+  const renderAnalysisStep = () => {
+    if (loadingStage) {
+      return (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <CircularProgress />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            {loadingStage}
+          </Typography>
+        </Box>
+      );
     }
-    if (data.needFunding === 'yes' && (!data.initialInvestment || data.initialInvestment <= 0)) {
-      errors.initialInvestment = 'Initial investment must be greater than 0';
+
+    if (error) {
+      return (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      );
     }
-    if (!data.businessModel) errors.businessModel = 'Business model is required';
-    if (!data.revenuePerUser || data.revenuePerUser <= 0) {
-      errors.revenuePerUser = 'Revenue per user must be greater than 0';
+
+    if (!analysis) {
+      return null;
     }
-    return errors;
+
+    return (
+      <Box>
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3 }} elevation={2}>
+              <Typography variant="h6" color="primary" gutterBottom>
+                Market Overview
+              </Typography>
+              <Typography variant="body1">
+                {analysis.marketInsights.summary}
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3 }} elevation={2}>
+              <Typography variant="h6" color="primary" gutterBottom>
+                Competitive Analysis
+              </Typography>
+              <Typography variant="body1">
+                {analysis.competitorInsights.summary}
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3 }} elevation={2}>
+              <Typography variant="h6" color="primary" gutterBottom>
+                Funding Strategy
+              </Typography>
+              <Typography variant="body1">
+                {analysis.fundingInsights.summary}
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3 }} elevation={2}>
+              <Typography variant="h6" color="primary" gutterBottom>
+                Growth Strategy
+              </Typography>
+              <Typography variant="body1">
+                {analysis.userGrowthInsights.summary}
+              </Typography>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" gutterBottom>
+            Detailed Analysis & Projections
+          </Typography>
+          <AnalysisDashboard analysisData={analysis} />
+        </Box>
+
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setActiveStep(0);
+              setAnalysis(null);
+            }}
+          >
+            Start New Analysis
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              console.log('Save/Export analysis');
+            }}
+          >
+            Save Analysis
+          </Button>
+        </Box>
+      </Box>
+    );
   };
-
-  const renderBasicInfo = () => (
-    <Card sx={{ mt: 2, p: 2 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          1️⃣ Basic Startup Information
-        </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Startup Idea"
-              name="startupIdea"
-              value={formData.startupIdea}
-              onChange={handleChange}
-              multiline
-              rows={4}
-              required
-              helperText="Describe your startup idea in detail"
-              error={!!formErrors.startupIdea}
-              helperText={formErrors.startupIdea}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Industry</InputLabel>
-              <Select
-                name="industry"
-                value={formData.industry}
-                onChange={handleChange}
-                required
-                error={!!formErrors.industry}
-              >
-                {INDUSTRIES.map(industry => (
-                  <MenuItem key={industry} value={industry}>{industry}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>{formErrors.industry}</FormHelperText>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Problem & Solution"
-              name="problemSolution"
-              value={formData.problemSolution}
-              onChange={handleChange}
-              multiline
-              rows={4}
-              required
-              helperText="Describe the problem you're solving and your solution"
-              error={!!formErrors.problemSolution}
-              helperText={formErrors.problemSolution}
-            />
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
-  );
-
-  const renderMarketInfo = () => (
-    <Card sx={{ mt: 2, p: 2 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          2️⃣ Market & Competition
-        </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Operation Location"
-              name="operationLocation"
-              value={formData.operationLocation}
-              onChange={handleChange}
-              required
-              helperText="Where will your startup operate?"
-              error={!!formErrors.operationLocation}
-              helperText={formErrors.operationLocation}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Target Users</InputLabel>
-              <Select
-                name="targetUsers"
-                value={formData.targetUsers}
-                onChange={handleChange}
-                required
-                error={!!formErrors.targetUsers}
-              >
-                {TARGET_USERS.map(user => (
-                  <MenuItem key={user} value={user}>{user}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>{formErrors.targetUsers}</FormHelperText>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>User Acquisition Strategy</InputLabel>
-              <Select
-                name="userAcquisition"
-                value={formData.userAcquisition}
-                onChange={handleChange}
-                required
-                error={!!formErrors.userAcquisition}
-              >
-                {USER_ACQUISITION.map(strategy => (
-                  <MenuItem key={strategy} value={strategy}>{strategy}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>{formErrors.userAcquisition}</FormHelperText>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
-  );
-
-  const renderFinancialInfo = () => (
-    <Card sx={{ mt: 2, p: 2 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          3️⃣ Financial & Growth
-        </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.needFunding === 'yes'}
-                  onChange={(e) => handleChange({
-                    target: {
-                      name: 'needFunding',
-                      value: e.target.checked ? 'yes' : 'no'
-                    }
-                  })}
-                />
-              }
-              label="Do you need funding?"
-            />
-            {formErrors.needFunding && (
-              <FormHelperText error={true}>{formErrors.needFunding}</FormHelperText>
-            )}
-          </Grid>
-          {formData.needFunding === 'yes' && (
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Initial Investment Needed"
-                name="initialInvestment"
-                value={formData.initialInvestment}
-                onChange={handleChange}
-                type="number"
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                }}
-                required
-                error={!!formErrors.initialInvestment}
-                helperText={formErrors.initialInvestment}
-              />
-            </Grid>
-          )}
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Business Model</InputLabel>
-              <Select
-                name="businessModel"
-                value={formData.businessModel}
-                onChange={handleChange}
-                required
-                error={!!formErrors.businessModel}
-              >
-                {BUSINESS_MODELS.map(model => (
-                  <MenuItem key={model} value={model}>{model}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>{formErrors.businessModel}</FormHelperText>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Expected Revenue per User"
-              name="revenuePerUser"
-              value={formData.revenuePerUser}
-              onChange={handleChange}
-              type="number"
-              InputProps={{
-                startAdornment: <InputAdornment position="start">$</InputAdornment>,
-              }}
-              required
-              error={!!formErrors.revenuePerUser}
-              helperText={formErrors.revenuePerUser}
-            />
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
-  );
-
-  const renderGrowthTrends = () => (
-    <Card sx={{ mt: 2, p: 2 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          4️⃣ Growth & Market Trends
-        </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Market Size</InputLabel>
-              <Select
-                name="marketSize"
-                value={formData.marketSize}
-                onChange={handleChange}
-                required
-              >
-                {MARKET_SIZES.map(size => (
-                  <MenuItem key={size} value={size}>{size}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Expected User Growth Rate (% per year)"
-              name="userGrowthRate"
-              value={formData.userGrowthRate}
-              onChange={handleChange}
-              type="number"
-              InputProps={{
-                endAdornment: <InputAdornment position="end">%</InputAdornment>,
-              }}
-              required
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Supporting Market Trends</InputLabel>
-              <Select
-                multiple
-                name="supportingTrends"
-                value={formData.supportingTrends}
-                onChange={handleMultiSelect}
-                required
-              >
-                {MARKET_TRENDS.map(trend => (
-                  <MenuItem key={trend} value={trend}>{trend}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>Select trends that support your startup</FormHelperText>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
-  );
-
-  const renderAiOptions = () => (
-    <Card sx={{ mt: 2, p: 2 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          5️⃣ AI & Reports
-        </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.needAiStrategies === 'yes'}
-                  onChange={(e) => handleChange({
-                    target: {
-                      name: 'needAiStrategies',
-                      value: e.target.checked ? 'yes' : 'no'
-                    }
-                  })}
-                />
-              }
-              label="Generate AI-powered growth strategies"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.needBenchmarking === 'yes'}
-                  onChange={(e) => handleChange({
-                    target: {
-                      name: 'needBenchmarking',
-                      value: e.target.checked ? 'yes' : 'no'
-                    }
-                  })}
-                />
-              }
-              label="Include competitor benchmarking"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.needPdfReport === 'yes'}
-                  onChange={(e) => handleChange({
-                    target: {
-                      name: 'needPdfReport',
-                      value: e.target.checked ? 'yes' : 'no'
-                    }
-                  })}
-                />
-              }
-              label="Generate PDF report"
-            />
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
-  );
-
-  const STEPS = [
-    {
-      label: 'Basic Info',
-      content: renderBasicInfo
-    },
-    {
-      label: 'Market & Competition',
-      content: renderMarketInfo
-    },
-    {
-      label: 'Financial & Growth',
-      content: renderFinancialInfo
-    },
-    {
-      label: 'Growth & Market Trends',
-      content: renderGrowthTrends
-    },
-    {
-      label: 'AI & Reports',
-      content: renderAiOptions
-    }
-  ];
 
   return (
-    <Box sx={{ width: '100%', p: 2 }}>
-      <Typography variant="h4" gutterBottom>
-        Startup Analysis Platform
-      </Typography>
-
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold text-center mb-8">Startup Idea Analyzer</h1>
+      
       <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {STEPS.map((step, index) => (
-          <Step key={step.label}>
-            <StepLabel>{step.label}</StepLabel>
+        {STEPS.map((label) => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
           </Step>
         ))}
       </Stepper>
 
-      <Box sx={{ mt: 2 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        {activeStep === STEPS.length ? (
-          analysis ? (
-            <AnalysisDashboard analysis={analysis} />
-          ) : (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-              <CircularProgress />
-            </Box>
-          )
-        ) : (
-          <>
-            {STEPS[activeStep].content()}
-            
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-              <Button
-                onClick={fillWithSampleData}
-                variant="outlined"
-                color="secondary"
-              >
-                Fill Test Data
-              </Button>
-              
-              <Box>
+      {activeStep === STEPS.length ? (
+        renderAnalysisStep()
+      ) : activeStep === STEPS.length - 1 ? (
+        renderCompetitorsStep()
+      ) : (
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleNext();
+        }}>
+          {getStepContent(activeStep)}
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+            <Button
+              disabled={activeStep === 0}
+              onClick={handleBack}
+            >
+              Back
+            </Button>
+            <Box>
+              {activeStep === 0 && (
                 <Button
-                  disabled={activeStep === 0}
-                  onClick={handleBack}
+                  onClick={() => setFormData(SAMPLE_DATA)}
                   sx={{ mr: 1 }}
                 >
-                  Back
+                  Fill Sample Data
                 </Button>
-                
-                {activeStep === STEPS.length - 1 ? (
-                  <Button
-                    variant="contained"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      'Analyze Startup'
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    onClick={handleNext}
-                  >
-                    Next
-                  </Button>
-                )}
-              </Box>
+              )}
+              <Button
+                variant="contained"
+                type="submit"
+                disabled={!!loadingStage}
+              >
+                {activeStep === STEPS.length - 2 ? 'Analyze' : 'Next'}
+              </Button>
             </Box>
-          </>
-        )}
-      </Box>
-    </Box>
+          </Box>
+        </form>
+      )}
+    </div>
   );
 };
 

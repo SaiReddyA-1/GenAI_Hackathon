@@ -1,4 +1,5 @@
 module.exports = {
+  root: true,
   env: {
     es6: true,
     node: true,
@@ -8,12 +9,12 @@ module.exports = {
   },
   extends: [
     "eslint:recommended",
-    "google",
   ],
   rules: {
-    "no-restricted-globals": ["error", "name", "length"],
-    "prefer-arrow-callback": "error",
-    "quotes": ["error", "double", {"allowTemplateLiterals": true}],
+    quotes: ["error", "double"],
+    "max-len": ["error", { "code": 120 }],
+    "indent": ["error", 2],
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
   },
   overrides: [
     {
@@ -21,8 +22,9 @@ module.exports = {
       env: {
         mocha: true,
       },
-      rules: {},
+      rules: {
+        "no-unused-expressions": "off",
+      },
     },
   ],
-  globals: {},
 };

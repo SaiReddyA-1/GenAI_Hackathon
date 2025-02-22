@@ -71,11 +71,11 @@ const handleAPIError = (error) => {
 };
 
 // Step 1: Detect industry and enrich basic data
-export async function detectIndustry(idea) {
+export function detectIndustry(idea) {
   try {
     const ideaLower = idea.toLowerCase();
     let maxMatches = 0;
-    let detectedCategory = 'AI_TECH';
+    let detectedCategory = 'AI_TECH'; // Default to AI_TECH if no matches found
     let confidence = 0;
 
     for (const [category, info] of Object.entries(industryCategories)) {
@@ -90,23 +90,30 @@ export async function detectIndustry(idea) {
       }
     }
 
-    // Enrich with industry data
-    const industryData = industryCategories[detectedCategory];
+    // Get the industry data
+    const industry = industryCategories[detectedCategory];
 
     return {
-      category: detectedCategory,
+      industry: detectedCategory,
       confidence,
-      industryData: {
-        avgMarketGrowth: industryData.avgMarketGrowth,
-        avgFundingRound: industryData.avgFundingRound,
-        suggestedBusinessModels: industryData.businessModels,
-        potentialRevenueStreams: industryData.revenueStreams
-      },
+      avgMarketGrowth: industry.avgMarketGrowth,
+      avgFundingRound: industry.avgFundingRound,
+      businessModels: industry.businessModels || [],
+      revenueStreams: industry.revenueStreams || [],
       reasoning: `Detected ${maxMatches} keyword matches for ${detectedCategory}`
     };
   } catch (error) {
     console.error('Error detecting industry:', error);
-    throw error;
+    // Return default data if detection fails
+    return {
+      industry: 'AI_TECH',
+      confidence: 0.5,
+      avgMarketGrowth: 35.6,
+      avgFundingRound: 2500000,
+      businessModels: ['SaaS', 'API Services', 'Enterprise Solutions'],
+      revenueStreams: ['Subscription', 'Usage-based', 'Licensing'],
+      reasoning: 'Using default AI_TECH category due to error'
+    };
   }
 }
 
@@ -377,120 +384,108 @@ function generateRevenueProjections(data) {
   };
 }
 
-// Enhanced analysis function with retries and fallback
-export async function analyzeStartupIdea(formData) {
-  let retries = 3;
-  let lastError = null;
-
-  while (retries > 0) {
+// Enhanced analysis function with fallback
+export const analyzeStartupIdea = async (formData) => {
+  try {
+    // Generate analysis using local data
+    const industryData = detectIndustry(formData.startupIdea);
+    const analysis = generateFallbackAnalysis(formData, industryData);
+    
+    // Try to store analysis in Firestore, but don't block if it fails
     try {
-      // Step 1: Detect industry and enrich data
-      const industryData = await detectIndustry(formData.startupIdea);
-      
-      // Step 2: Enrich missing data
-      const enrichedData = await enrichMissingData(formData, industryData);
-      
-      // Step 3: Get AI analysis
-      const gptAnalysis = await analyzeWithGPT({
-        idea: enrichedData,
-        industry: industryData
-      });
-      
-      // Step 4: Process and combine all data
-      const analysis = await processAndAnalyzeData(enrichedData, industryData, gptAnalysis.data);
-      
-      // Step 5: Store analysis in Firestore
-      await addDoc(collection(db, 'analyses'), {
-        ...analysis,
-        timestamp: new Date(),
-        userId: formData.userId
-      });
-
-      return analysis;
-
-    } catch (error) {
-      lastError = error;
-      retries--;
-      
-      if (retries === 0) {
-        console.warn('All retries failed, using fallback analysis');
-        return generateFallbackAnalysis(formData, await detectIndustry(formData.startupIdea));
+      if (db) {
+        await addDoc(collection(db, 'analyses'), {
+          ...analysis,
+          timestamp: new Date(),
+          userId: formData.userId || 'anonymous',
+          startupIdea: formData.startupIdea
+        });
       }
-      
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      // Log the error but don't throw it - we still want to show the analysis
+      console.warn('Failed to store analysis:', error);
     }
+
+    // Return the analysis even if storing in Firestore failed
+    return analysis;
+  } catch (error) {
+    console.error('Analysis error:', error);
+    // Return a basic analysis even if everything fails
+    return generateFallbackAnalysis(
+      { startupIdea: formData.startupIdea || 'Unknown Startup' },
+      {
+        industry: 'TECH',
+        avgMarketGrowth: 20,
+        avgFundingRound: 1000000,
+        businessModels: ['SaaS'],
+        revenueStreams: ['Subscription']
+      }
+    );
   }
-}
+};
 
 // Generate fallback analysis if AI analysis fails
-function generateFallbackAnalysis(data, industryData) {
-  const marketSize = data.marketSize || 'Large';
-  const growthRate = parseFloat(data.userGrowthRate) || industryData.avgMarketGrowth;
-  const competitors = data.competitors ? data.competitors.split(',').map(c => c.trim()) : [];
+const generateFallbackAnalysis = (formData, industryData) => {
+  const currentYear = new Date().getFullYear();
+  const years = [currentYear, currentYear + 1, currentYear + 2, currentYear + 3];
+  
+  // Ensure we have default values if industryData is incomplete
+  const defaultData = {
+    avgMarketGrowth: 35.6,
+    avgFundingRound: 2500000,
+    businessModels: ['SaaS', 'API Services', 'Enterprise Solutions'],
+    revenueStreams: ['Subscription', 'Usage-based', 'Licensing'],
+    industry: 'AI_TECH'
+  };
+
+  // Merge with defaults
+  const data = {
+    ...defaultData,
+    ...industryData
+  };
+
+  // Extract user input values or use defaults
+  const userGrowthRate = parseFloat(formData.userGrowthRate) || 45;
+  const initialInvestment = parseFloat(formData.initialInvestment) || data.avgFundingRound;
+  const competitors = formData.competitors?.split(',').map(c => c.trim()) || ['Market Leader', 'Competitor A', 'Your Startup'];
   
   return {
-    overview: {
-      industry: data.industry,
-      marketSize: marketSize,
-      growthRate: growthRate,
-      competitorCount: competitors.length
+    marketGrowth: {
+      years: years,
+      values: years.map((_, index) => Math.round((index + 1) * data.avgMarketGrowth))
     },
-    marketAnalysis: {
-      trendAnalysis: {
-        trend: industryData.trend || 'Growing',
-        keyDrivers: industryData.keyDrivers || ['Market demand', 'Technology adoption'],
-        riskFactors: industryData.riskFactors || ['Market competition', 'Regulatory changes']
-      },
-      competitorBenchmark: competitors.map(comp => ({
-        name: comp,
-        metrics: {
-          marketShare: '10%',
-          userBase: '100,000+',
-          funding: '$1M-5M',
-          growth: '20%'
-        }
-      })),
-      marketOpportunities: [
-        'Growing market demand',
-        'Technology advancement',
-        'Changing consumer behavior'
-      ],
-      marketThreats: [
-        'Intense competition',
-        'Regulatory challenges',
-        'Market uncertainty'
-      ]
+    competitorComparison: {
+      competitors: competitors,
+      marketShare: competitors.map((_, index) => {
+        if (index === competitors.length - 1) return 25; // Your startup
+        if (index === 0) return 40; // Market leader
+        return Math.floor(35 / (competitors.length - 2)); // Split remaining share
+      })
     },
-    financialProjections: {
-      estimatedFunding: {
-        initialFunding: parseFloat(data.initialInvestment) || industryData.avgFundingRound,
-        projectedRunway: '18 months',
-        fundingMilestones: ['MVP Development', 'Market Entry', 'Scale Operations']
-      },
-      revenueProjections: generateRevenueProjections(data),
-      breakEvenAnalysis: calculateBreakEven(data)
+    fundingPrediction: {
+      years: years,
+      fundingAmount: years.map((_, index) => 
+        Math.round((initialInvestment * (1 + index * 0.5)) / 1000000)
+      )
     },
-    aiRecommendations: {
-      businessModel: recommendBusinessModel(data, industryData),
-      growthStrategy: [
-        'Focus on product development',
-        'Build strong market presence',
-        'Develop strategic partnerships'
-      ],
-      riskMitigation: [
-        'Diversify revenue streams',
-        'Build strong team',
-        'Monitor market trends'
-      ]
+    userGrowth: {
+      years: years,
+      userBase: years.map((_, index) => Math.round(1000 * Math.pow(1 + userGrowthRate/100, index)))
     },
-    visualData: {
-      marketTrendChart: generateMarketTrendData(data),
-      competitorComparisonData: generateCompetitorComparisonData(data),
-      projectionCharts: generateProjectionCharts(data)
+    marketInsights: {
+      summary: `The ${data.industry} industry shows strong potential with an average growth rate of ${data.avgMarketGrowth}% annually. ${formData.startupIdea} aligns well with current market trends${formData.supportingTrends ? `, particularly in ${formData.supportingTrends.join(' and ')}` : ''}.`
+    },
+    competitorInsights: {
+      summary: `Main competitors (${competitors.slice(0, -1).join(', ')}) typically focus on ${data.businessModels.slice(0, 2).join(' and ')}. There's room for differentiation through innovative approaches and unique value propositions.`
+    },
+    fundingInsights: {
+      summary: `Initial investment of $${(initialInvestment/1000000).toFixed(1)}M aligns with industry averages. ${formData.needFunding === 'yes' ? 'Consider starting with angel investors or accelerators for seed funding.' : 'Your bootstrap strategy could work well given the business model.'}`
+    },
+    userGrowthInsights: {
+      summary: `Targeting ${formData.targetUsers || 'users'} through ${formData.userAcquisition || 'multiple channels'}, we project ${userGrowthRate}% user growth rate. Focus on ${data.revenueStreams[0]} and ${data.revenueStreams[1] || 'market expansion'} for initial traction.`
     }
   };
-}
+};
 
 // Utility functions for calculations
 function calculateMonthlyRevenue(data, month) {

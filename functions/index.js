@@ -7,8 +7,14 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-const {onRequest} = require("firebase-functions/v2/https");
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const { onRequest } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
+
+admin.initializeApp();
+
+const db = admin.firestore();
 
 // Create and deploy your first functions
 // https://firebase.google.com/docs/functions/get-started
@@ -18,14 +24,7 @@ const logger = require("firebase-functions/logger");
 //   response.send("Hello from Firebase!");
 // });
 
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
 const cors = require('cors')({ origin: true }); // Allow all origins for development
-
-// Initialize admin only if not already initialized
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
 
 // Function to generate startup questions using Gemini Chatbot Extension
 exports.generateStartupQuestions = functions.https.onCall((data, context) => {
@@ -102,91 +101,115 @@ Previous Answers: ${JSON.stringify(previousAnswers)}`,
 });
 
 // Function to analyze startup idea using Gemini
-exports.analyzeStartupIdea = functions.https.onCall((data, context) => {
-  return cors((req, res) => {
-    try {
-      const { idea, category, answers } = data;
+exports.analyzeStartupIdea = functions.https.onCall(async (data) => {
+  try {
+    const startupIdea = data.startupIdea;
+    const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
-      // Create conversation history for context
-      const conversationHistory = Object.entries(answers).map(([id, answer]) => ({
-        role: id === 'startup_idea' ? 'user_idea' : 'user',
-        content: answer
-      }));
+    // Store the startup idea in Firestore
+    const docRef = await db.collection("startupIdeas").add({
+      idea: startupIdea,
+      timestamp: timestamp,
+      status: "pending"
+    });
 
-      // Call the Gemini Chatbot extension for analysis
-      admin.firestore()
-        .collection('ext-firestore-gemini-chatbot-conversations')
-        .add({
-          prompt: `As a startup advisor, analyze this startup idea and provide a comprehensive evaluation. 
-          
-Startup Idea: ${idea}
-Category: ${category}
-Previous Answers: ${JSON.stringify(answers)}
-
-Provide analysis in the following JSON format:
-{
-  "businessModel": {
-    "recommendedModels": ["model1", "model2"],
-    "reasoning": ["reason1", "reason2"],
-    "risks": ["risk1", "risk2"],
-    "opportunities": ["opportunity1", "opportunity2"]
-  },
-  "revenueStrategy": {
-    "primaryRevenue": "main revenue stream",
-    "secondaryRevenue": ["other streams"],
-    "pricingStrategy": "pricing approach",
-    "monetizationTimeline": "timeline details"
-  },
-  "marketInsights": {
-    "targetSegments": ["segment1", "segment2"],
-    "problemStatement": "problem description",
-    "marketSize": "market size estimate",
-    "competitors": ["competitor1", "competitor2"]
-  },
-  "executionPlan": {
-    "goToMarket": "go to market strategy",
-    "resourceNeeds": "required resources"
+    // Return the document ID
+    return {
+      success: true,
+      message: "Startup idea submitted successfully",
+      docId: docRef.id
+    };
+  } catch (error) {
+    console.error("Error analyzing startup idea:", error);
+    return {
+      success: false,
+      message: "Error processing startup idea"
+    };
   }
-}`,
-          temperature: 0.7,
-          maxTokens: 1000,
-          conversationHistory: conversationHistory,
-          userId: context.auth?.uid || 'anonymous'
-        })
-        .then(chatbotResponse => {
-          // Wait for the response
-          const unsubscribe = admin.firestore()
-            .collection('ext-firestore-gemini-chatbot-responses')
-            .doc(chatbotResponse.id)
-            .onSnapshot((doc) => {
-              if (doc.exists && doc.data()?.response) {
-                unsubscribe();
-                let analysis = doc.data().response;
+});
 
-                // Parse the JSON response
-                try {
-                  if (typeof analysis === 'string') {
-                    analysis = JSON.parse(analysis);
-                  }
-                  
-                  res.json({
-                    category,
-                    ...analysis
-                  });
-                } catch (error) {
-                  console.error('Error parsing Gemini response:', error);
-                  res.status(500).send('Failed to parse analysis');
-                }
-              }
-            });
-        })
-        .catch(error => {
-          console.error('Error analyzing startup:', error);
-          res.status(500).send('Failed to analyze startup');
-        });
+exports.getStartupAnalysis = functions.https.onCall(async (data) => {
+  try {
+    const docId = data.docId;
+    
+    // Get the analysis from Firestore
+    const doc = await db.collection("startupIdeas").doc(docId).get();
+    
+    if (!doc.exists) {
+      return {
+        success: false,
+        message: "Analysis not found"
+      };
+    }
+
+    const analysis = doc.data();
+    return {
+      success: true,
+      analysis: analysis
+    };
+
+  } catch (error) {
+    console.error("Error fetching startup analysis:", error);
+    return {
+      success: false,
+      message: "Error retrieving analysis"
+    };
+  }
+});
+
+// Function to analyze startup idea using Gemini
+exports.analyzeStartupIdeaOld = functions.https.onRequest((request, response) => {
+  cors(request, response, async () => {
+    try {
+      // Set CORS headers
+      response.set('Access-Control-Allow-Origin', '*');
+      response.set('Access-Control-Allow-Methods', 'GET, POST');
+      response.set('Access-Control-Allow-Headers', 'Content-Type');
+
+      // Handle preflight requests
+      if (request.method === 'OPTIONS') {
+        response.status(204).send('');
+        return;
+      }
+
+      const { startupIdea, industry, marketSize, competitors, businessModel } = request.body;
+
+      // Your analysis logic here
+      const analysis = {
+        marketGrowth: {
+          years: ["2024", "2025", "2026", "2027"],
+          values: [10, 15, 25, 40]
+        },
+        competitorComparison: {
+          competitors: competitors || ["Competitor A", "Competitor B", "Your Startup"],
+          marketShare: [35, 40, 25]
+        },
+        fundingPrediction: {
+          years: ["2024", "2025", "2026", "2027"],
+          fundingAmount: [1, 5, 12, 20]
+        },
+        userGrowth: {
+          years: ["2024", "2025", "2026", "2027"],
+          userBase: [1000, 5000, 20000, 80000]
+        },
+        marketInsights: {
+          summary: `Analysis for ${startupIdea} in ${industry} industry shows promising growth potential.`
+        },
+        competitorInsights: {
+          summary: `Main competitors identified: ${competitors ? competitors.join(', ') : 'None specified'}`
+        },
+        fundingInsights: {
+          summary: "Based on market trends, initial seed funding of $1-2M recommended."
+        },
+        userGrowthInsights: {
+          summary: "Projected user growth shows strong adoption potential in first 24 months."
+        }
+      };
+
+      response.json(analysis);
     } catch (error) {
-      console.error('Error analyzing startup:', error);
-      res.status(500).send('Failed to analyze startup');
+      console.error('Error:', error);
+      response.status(500).json({ error: error.message });
     }
   });
 });
