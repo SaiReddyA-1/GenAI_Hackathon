@@ -31,6 +31,7 @@ import { analyzeStartupIdea } from '../services/openai';
 import { getCompetitorsWithGemini, getStartupInsightsWithGemini } from '../services/gemini';
 import useAuth from '../hooks/useAuth';
 import AnalysisDashboard from './AnalysisDashboard';
+import NavbarWrapper from './NavbarWrapper';
 
 const INDUSTRIES = [
   'AI',
@@ -696,56 +697,59 @@ const StartupForm = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold text-center mb-8">Startup Idea Analyzer</h1>
-      
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {STEPS.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+    <>
+      <NavbarWrapper />
+      <div className="container mx-auto p-6" style={{ marginTop: '16px' }}>
+        <h1 className="text-3xl font-bold text-center mb-8">Startup Idea Analyzer</h1>
+        
+        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+          {STEPS.map((label) => (
+            <Step key={label}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
 
-      {activeStep === STEPS.length ? (
-        renderAnalysisStep()
-      ) : activeStep === STEPS.length - 1 ? (
-        renderCompetitorsStep()
-      ) : (
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handleNext();
-        }}>
-          {getStepContent(activeStep)}
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-            <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-            >
-              Back
-            </Button>
-            <Box>
-              {activeStep === 0 && (
-                <Button
-                  onClick={() => setFormData(SAMPLE_DATA)}
-                  sx={{ mr: 1 }}
-                >
-                  Fill Sample Data
-                </Button>
-              )}
+        {activeStep === STEPS.length ? (
+          renderAnalysisStep()
+        ) : activeStep === STEPS.length - 1 ? (
+          renderCompetitorsStep()
+        ) : (
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleNext();
+          }}>
+            {getStepContent(activeStep)}
+            
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
               <Button
-                variant="contained"
-                type="submit"
-                disabled={!!loadingStage}
+                disabled={activeStep === 0}
+                onClick={handleBack}
               >
-                {activeStep === STEPS.length - 2 ? 'Analyze' : 'Next'}
+                Back
               </Button>
+              <Box>
+                {activeStep === 0 && (
+                  <Button
+                    onClick={() => setFormData(SAMPLE_DATA)}
+                    sx={{ mr: 1 }}
+                  >
+                    Fill Sample Data
+                  </Button>
+                )}
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={!!loadingStage}
+                >
+                  {activeStep === STEPS.length - 2 ? 'Analyze' : 'Next'}
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        </form>
-      )}
-    </div>
+          </form>
+        )}
+      </div>
+    </>
   );
 };
 

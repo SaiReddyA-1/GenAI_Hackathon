@@ -5,7 +5,6 @@ import { Container, Box, CircularProgress } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import StartupForm from './components/StartupForm';
 import AnalysisDashboard from './components/AnalysisDashboard';
-import Header from './components/Header';
 import Auth from './components/Auth';
 import Landing from './components/Landing';
 import useAuth from './hooks/useAuth';
@@ -82,7 +81,6 @@ function App() {
             path="/dashboard/*"
             element={
               <ProtectedRoute>
-                <Header darkMode={darkMode} setDarkMode={setDarkMode} />
                 <Container maxWidth="lg">
                   {analysisData ? (
                     <AnalysisDashboard data={analysisData} />
@@ -99,12 +97,9 @@ function App() {
               user ? (
                 <Navigate to="/dashboard" />
               ) : (
-                <>
-                  <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-                  <Container maxWidth="lg">
-                    <Auth />
-                  </Container>
-                </>
+                <Container maxWidth="lg">
+                  <Auth />
+                </Container>
               )
             }
           />

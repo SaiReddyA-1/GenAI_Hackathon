@@ -14,6 +14,7 @@
     "axios": "^1.4.0",
     "chart.js": "^4.4.8",
     "firebase": "^9.23.0",
+    "framer-motion": "^12.4.7",
     "google-trends-api": "^4.9.2",
     "gsap": "^3.12.7",
     "html2canvas": "^1.4.1",

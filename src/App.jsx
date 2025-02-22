@@ -4,7 +4,6 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Container, Box, CircularProgress } from '@mui/material';
 import StartupForm from './components/StartupForm';
 import AnalysisDashboard from './components/AnalysisDashboard';
-import Header from './components/Header';
 import Auth from './components/Auth';
 import useAuth from './hooks/useAuth';
 
@@ -47,17 +46,14 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Header darkMode={darkMode} setDarkMode={setDarkMode} />
       <Container maxWidth="lg">
-        <Box sx={{ my: 4 }}>
-          {!user ? (
-            <Auth />
-          ) : !analysisData ? (
-            <StartupForm onAnalysisComplete={handleAnalysisComplete} />
-          ) : (
-            <AnalysisDashboard data={analysisData} />
-          )}
-        </Box>
+        {!user ? (
+          <Auth />
+        ) : analysisData ? (
+          <AnalysisDashboard data={analysisData} />
+        ) : (
+          <StartupForm onAnalysisComplete={handleAnalysisComplete} />
+        )}
       </Container>
     </ThemeProvider>
   );
