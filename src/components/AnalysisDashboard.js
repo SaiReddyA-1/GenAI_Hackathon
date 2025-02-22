@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   Grid,
   Paper,
   CircularProgress,
+  Backdrop,
 } from '@mui/material';
 import {
   LineChart,
@@ -31,15 +32,62 @@ import NavbarWrapper from './NavbarWrapper';
 import MarketGrowthChart from './MarketGrowthChart';
 import CompetitorChart from './CompetitorChart';
 import MarketShareChart from './MarketShareChart';
+import LoadingOverlay from './LoadingOverlay';
 
 const AnalysisDashboard = ({ analysis }) => {
-  if (!analysis) {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisData, setAnalysisData] = useState(null);
+
+  useEffect(() => {
+    if (analysis) {
+      setAnalysisData(analysis);
+    }
+  }, [analysis]);
+
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Sample data - replace with actual API call
+      const data = analysis;
+
+      setAnalysisData(data);
+    } catch (error) {
+      console.error('Error during analysis:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  if (!analysisData) {
     return (
       <>
         <NavbarWrapper />
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-          <CircularProgress />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Startup Analysis Dashboard
+          </Typography>
+          <Box sx={{ position: 'relative', minWidth: 120 }}>
+            <CircularProgress
+              size={24}
+              sx={{
+                color: 'primary.light',
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                marginTop: '-12px',
+                marginLeft: '-12px',
+              }}
+            />
+          </Box>
         </Box>
+
+        <LoadingOverlay 
+          open={true} 
+          message="Analyzing Your Market..."
+        />
       </>
     );
   }
@@ -51,9 +99,9 @@ const AnalysisDashboard = ({ analysis }) => {
     aiRecommendations,
     competitorAnalysis,
     marketTrends,
-  } = analysis;
+  } = analysisData;
 
-  console.log('AnalysisDashboard - Full analysis data:', analysis);
+  console.log('AnalysisDashboard - Full analysis data:', analysisData);
   console.log('AnalysisDashboard - Market Trends:', marketTrends);
   console.log('AnalysisDashboard - Competitor Analysis:', competitorAnalysis);
 
@@ -66,6 +114,10 @@ const AnalysisDashboard = ({ analysis }) => {
   return (
     <>
       <NavbarWrapper />
+      <LoadingOverlay 
+        open={isAnalyzing} 
+        message="Analyzing Your Market..."
+      />
       <Box sx={{ 
         p: { xs: 2, md: 4 }, 
         bgcolor: '#f8fafc', 
