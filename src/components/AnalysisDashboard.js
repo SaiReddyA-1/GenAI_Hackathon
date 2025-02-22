@@ -28,6 +28,9 @@ import GroupIcon from '@mui/icons-material/Group';
 import SearchIcon from '@mui/icons-material/Search';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import NavbarWrapper from './NavbarWrapper';
+import MarketGrowthChart from './MarketGrowthChart';
+import CompetitorChart from './CompetitorChart';
+import MarketShareChart from './MarketShareChart';
 
 const AnalysisDashboard = ({ analysis }) => {
   if (!analysis) {
@@ -46,20 +49,17 @@ const AnalysisDashboard = ({ analysis }) => {
     marketAnalysis,
     financialProjections,
     aiRecommendations,
-    visualData
+    competitorAnalysis,
+    marketTrends,
   } = analysis;
+
+  console.log('AnalysisDashboard - Full analysis data:', analysis);
+  console.log('AnalysisDashboard - Market Trends:', marketTrends);
+  console.log('AnalysisDashboard - Competitor Analysis:', competitorAnalysis);
 
   // Format currency
   const formatCurrency = (value) => {
-    if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(1)}B`;
-    }
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
-    }
-    if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`;
-    }
+    if (!value) return '$0';
     return `$${value}`;
   };
 
@@ -204,13 +204,64 @@ const AnalysisDashboard = ({ analysis }) => {
           </Grid>
         </Grid>
 
+        {/* Charts Section */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={4}>
+            <Paper
+              sx={{
+                p: 3,
+                height: '100%',
+                bgcolor: '#fff',
+                borderRadius: 2,
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+              }}
+            >
+              <Box sx={{ height: 300 }}>
+                <MarketGrowthChart data={marketTrends} />
+              </Box>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Paper
+              sx={{
+                p: 3,
+                height: '100%',
+                bgcolor: '#fff',
+                borderRadius: 2,
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+              }}
+            >
+              <Box sx={{ height: 300 }}>
+                <MarketShareChart data={competitorAnalysis} />
+              </Box>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Paper
+              sx={{
+                p: 3,
+                height: '100%',
+                bgcolor: '#fff',
+                borderRadius: 2,
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+              }}
+            >
+              <Box sx={{ height: 300 }}>
+                <CompetitorChart data={competitorAnalysis} />
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
+
         {/* Market Trends Chart */}
         <Grid container spacing={4}>
           <Grid item xs={12} md={8}>
             <Typography variant="h6" sx={{ mb: 2 }}>Revenue & Growth Projections</Typography>
             <Box sx={{ height: 300, width: '100%' }}>
               <ResponsiveContainer>
-                <LineChart data={visualData.marketTrendChart}>
+                <LineChart data={marketTrends}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="month" stroke="#6b7280" />
                   <YAxis stroke="#6b7280" />
@@ -241,7 +292,7 @@ const AnalysisDashboard = ({ analysis }) => {
             <Typography variant="h6" sx={{ mb: 2 }}>Competitor Analysis</Typography>
             <Box sx={{ height: 300, width: '100%' }}>
               <ResponsiveContainer>
-                <RadarChart data={visualData.competitorComparisonData.competitors}>
+                <RadarChart data={competitorAnalysis.competitors}>
                   <PolarGrid />
                   <PolarAngleAxis dataKey="name" />
                   <PolarRadiusAxis />
@@ -263,7 +314,7 @@ const AnalysisDashboard = ({ analysis }) => {
           <Typography variant="h6" sx={{ mb: 2 }}>Financial Projections</Typography>
           <Box sx={{ height: 300, width: '100%' }}>
             <ResponsiveContainer>
-              <BarChart data={visualData.projectionCharts.financial}>
+              <BarChart data={financialProjections.projectionCharts.financial}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />

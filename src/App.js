@@ -8,6 +8,7 @@ import AnalysisDashboard from './components/AnalysisDashboard';
 import Auth from './components/Auth';
 import Landing from './components/Landing';
 import useAuth from './hooks/useAuth';
+import ChatBot from './components/ChatBot';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -104,6 +105,7 @@ function App() {
             }
           />
         </Routes>
+        <ChatBot />
       </Router>
     </ThemeProvider>
   );
