@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Container, Box, CircularProgress } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import StartupForm from './components/StartupForm';
 import AnalysisDashboard from './components/AnalysisDashboard';
 import Header from './components/Header';
 import Auth from './components/Auth';
+import Landing from './components/Landing';
 import useAuth from './hooks/useAuth';
 
 function App() {
@@ -17,11 +19,22 @@ function App() {
     palette: {
       mode: darkMode ? 'dark' : 'light',
       primary: {
-        main: '#2196f3',
+        main: '#00ADB5',
       },
       secondary: {
-        main: '#f50057',
+        main: '#AC7DD2',
       },
+      background: {
+        default: darkMode ? '#222831' : '#fdf6fd',
+        paper: darkMode ? '#393E46' : '#fff4ff',
+      },
+      text: {
+        primary: darkMode ? '#EEEEEE' : '#222831',
+        secondary: darkMode ? '#C5C5C5' : '#393E46',
+      },
+    },
+    typography: {
+      fontFamily: "'Inter', sans-serif",
     },
   });
 
@@ -31,34 +44,58 @@ function App() {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-        }}
-      >
-        <CircularProgress />
-      </Box>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      </ThemeProvider>
     );
   }
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-      <Container maxWidth="lg">
-        <Box sx={{ my: 4 }}>
-          {!user ? (
-            <Auth />
-          ) : !analysisData ? (
-            <StartupForm onAnalysisComplete={handleAnalysisComplete} />
-          ) : (
-            <AnalysisDashboard data={analysisData} />
-          )}
-        </Box>
-      </Container>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route
+            path="/dashboard"
+            element={
+              <>
+                <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+                <Container maxWidth="lg">
+                  {!user ? (
+                    <Navigate to="/login" />
+                  ) : analysisData ? (
+                    <AnalysisDashboard data={analysisData} />
+                  ) : (
+                    <StartupForm onAnalysisComplete={handleAnalysisComplete} />
+                  )}
+                </Container>
+              </>
+            }
+          />
+          <Route 
+            path="/login" 
+            element={
+              <>
+                <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+                <Container maxWidth="lg">
+                  {!user ? <Auth /> : <Navigate to="/dashboard" />}
+                </Container>
+              </>
+            } 
+          />
+        </Routes>
+      </Router>
     </ThemeProvider>
   );
 }
