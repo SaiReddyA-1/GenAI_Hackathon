@@ -20,6 +20,7 @@ const logger = require("firebase-functions/logger");
 
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const cors = require('cors')({ origin: true }); // Allow all origins for development
 
 // Initialize admin only if not already initialized
 if (!admin.apps.length) {
@@ -27,95 +28,165 @@ if (!admin.apps.length) {
 }
 
 // Function to generate startup questions using Gemini Chatbot Extension
-exports.generateStartupQuestions = functions.https.onCall(async (data, context) => {
-  try {
-    const { idea, industry, previousAnswers } = data;
-    
-    // If this is the first question
-    if (Object.keys(previousAnswers || {}).length === 0) {
-      return {
-        questions: [{
-          id: 'startup_idea',
-          question: "What's your startup idea?",
-          type: 'text'
-        }]
-      };
-    }
+exports.generateStartupQuestions = functions.https.onCall((data, context) => {
+  return cors((req, res) => {
+    try {
+      const { idea, industry, previousAnswers } = data;
+      
+      // If this is the first question
+      if (Object.keys(previousAnswers || {}).length === 0) {
+        return res.json({
+          questions: [{
+            id: 'startup_idea',
+            question: "What's your startup idea?",
+            type: 'text'
+          }]
+        });
+      }
 
-    // Create conversation history for context
-    const conversationHistory = Object.entries(previousAnswers).map(([id, answer]) => ({
-      role: id === 'startup_idea' ? 'user_idea' : 'user',
-      content: answer
-    }));
+      // Create conversation history for context
+      const conversationHistory = Object.entries(previousAnswers).map(([id, answer]) => ({
+        role: id === 'startup_idea' ? 'user_idea' : 'user',
+        content: answer
+      }));
 
-    // Call the Gemini Chatbot extension
-    const chatbotResponse = await admin.firestore()
-      .collection('ext-firestore-gemini-chatbot-conversations')
-      .add({
-        prompt: `As a startup advisor, I need you to generate ONE insightful follow-up question about this startup idea. Focus on market validation, business model, technical feasibility, competitive advantage, growth potential, or risk assessment. Format as a single direct question.
+      // Call the Gemini Chatbot extension
+      admin.firestore()
+        .collection('ext-firestore-gemini-chatbot-conversations')
+        .add({
+          prompt: `As a startup advisor, I need you to generate ONE insightful follow-up question about this startup idea. Focus on market validation, business model, technical feasibility, competitive advantage, growth potential, or risk assessment. Format as a single direct question.
 
 Context:
 Startup Idea: ${idea}
 Industry: ${industry}
 Previous Answers: ${JSON.stringify(previousAnswers)}`,
-        temperature: 0.7,
-        maxTokens: 100,
-        conversationHistory: conversationHistory,
-        userId: context.auth?.uid || 'anonymous'
-      });
+          temperature: 0.7,
+          maxTokens: 100,
+          conversationHistory: conversationHistory,
+          userId: context.auth?.uid || 'anonymous'
+        })
+        .then(chatbotResponse => {
+          // Wait for the response
+          const unsubscribe = admin.firestore()
+            .collection('ext-firestore-gemini-chatbot-responses')
+            .doc(chatbotResponse.id)
+            .onSnapshot((doc) => {
+              if (doc.exists && doc.data()?.response) {
+                unsubscribe();
+                let question = doc.data().response.trim();
 
-    // Wait for the response
-    const responseDoc = await new Promise((resolve) => {
-      const unsubscribe = admin.firestore()
-        .collection('ext-firestore-gemini-chatbot-responses')
-        .doc(chatbotResponse.id)
-        .onSnapshot((doc) => {
-          if (doc.exists && doc.data()?.response) {
-            unsubscribe();
-            resolve(doc);
-          }
+                // Ensure the response is a question
+                if (!question.endsWith('?')) {
+                  question += '?';
+                }
+
+                res.json({
+                  questions: [{
+                    id: 'q_' + Object.keys(previousAnswers || {}).length,
+                    question: question,
+                    type: 'text'
+                  }]
+                });
+              }
+            });
+        })
+        .catch(error => {
+          console.error('Error generating questions:', error);
+          res.status(500).send('Failed to generate questions');
         });
-    });
-
-    let question = responseDoc.data().response.trim();
-
-    // Ensure the response is a question
-    if (!question.endsWith('?')) {
-      question += '?';
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      res.status(500).send('Failed to generate questions');
     }
+  });
+});
 
-    return {
-      questions: [{
-        id: 'q_' + Object.keys(previousAnswers || {}).length,
-        question: question,
-        type: 'text'
-      }]
-    };
+// Function to analyze startup idea using Gemini
+exports.analyzeStartupIdea = functions.https.onCall((data, context) => {
+  return cors((req, res) => {
+    try {
+      const { idea, category, answers } = data;
 
-  } catch (error) {
-    console.error('Error generating question:', error);
-    
-    // Fallback questions if the extension fails
-    const fallbackQuestions = [
-      "What is your target market and its size?",
-      "How do you plan to monetize your solution?",
-      "Who are your main competitors and what's your unique advantage?",
-      "What are the key technical challenges in building this solution?",
-      "What is your go-to-market strategy?",
-      "How do you plan to scale the business?",
-      "What are the major risks and how will you mitigate them?",
-      "What resources and funding will you need initially?",
-      "How will you measure success and key metrics?",
-      "What is your timeline for launching the MVP?"
-    ];
+      // Create conversation history for context
+      const conversationHistory = Object.entries(answers).map(([id, answer]) => ({
+        role: id === 'startup_idea' ? 'user_idea' : 'user',
+        content: answer
+      }));
 
-    const currentCount = Object.keys(previousAnswers || {}).length;
-    return {
-      questions: [{
-        id: 'q_' + currentCount,
-        question: fallbackQuestions[currentCount % fallbackQuestions.length],
-        type: 'text'
-      }]
-    };
+      // Call the Gemini Chatbot extension for analysis
+      admin.firestore()
+        .collection('ext-firestore-gemini-chatbot-conversations')
+        .add({
+          prompt: `As a startup advisor, analyze this startup idea and provide a comprehensive evaluation. 
+          
+Startup Idea: ${idea}
+Category: ${category}
+Previous Answers: ${JSON.stringify(answers)}
+
+Provide analysis in the following JSON format:
+{
+  "businessModel": {
+    "recommendedModels": ["model1", "model2"],
+    "reasoning": ["reason1", "reason2"],
+    "risks": ["risk1", "risk2"],
+    "opportunities": ["opportunity1", "opportunity2"]
+  },
+  "revenueStrategy": {
+    "primaryRevenue": "main revenue stream",
+    "secondaryRevenue": ["other streams"],
+    "pricingStrategy": "pricing approach",
+    "monetizationTimeline": "timeline details"
+  },
+  "marketInsights": {
+    "targetSegments": ["segment1", "segment2"],
+    "problemStatement": "problem description",
+    "marketSize": "market size estimate",
+    "competitors": ["competitor1", "competitor2"]
+  },
+  "executionPlan": {
+    "goToMarket": "go to market strategy",
+    "resourceNeeds": "required resources"
   }
+}`,
+          temperature: 0.7,
+          maxTokens: 1000,
+          conversationHistory: conversationHistory,
+          userId: context.auth?.uid || 'anonymous'
+        })
+        .then(chatbotResponse => {
+          // Wait for the response
+          const unsubscribe = admin.firestore()
+            .collection('ext-firestore-gemini-chatbot-responses')
+            .doc(chatbotResponse.id)
+            .onSnapshot((doc) => {
+              if (doc.exists && doc.data()?.response) {
+                unsubscribe();
+                let analysis = doc.data().response;
+
+                // Parse the JSON response
+                try {
+                  if (typeof analysis === 'string') {
+                    analysis = JSON.parse(analysis);
+                  }
+                  
+                  res.json({
+                    category,
+                    ...analysis
+                  });
+                } catch (error) {
+                  console.error('Error parsing Gemini response:', error);
+                  res.status(500).send('Failed to parse analysis');
+                }
+              }
+            });
+        })
+        .catch(error => {
+          console.error('Error analyzing startup:', error);
+          res.status(500).send('Failed to analyze startup');
+        });
+    } catch (error) {
+      console.error('Error analyzing startup:', error);
+      res.status(500).send('Failed to analyze startup');
+    }
+  });
 });

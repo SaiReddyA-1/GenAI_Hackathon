@@ -1,280 +1,196 @@
-import { functions, db } from '../config/firebase';
-import { httpsCallable } from 'firebase/functions';
+import { db } from '../config/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
-// Industry-specific response templates
-const templates = {
-  technology: {
-    marketSize: "The global technology market size is estimated to be...",
-    competitors: ["Google", "Microsoft", "Apple", "Amazon"],
-    risks: [
-      "Rapid technological changes",
-      "High competition",
-      "Cybersecurity threats",
-      "Regulatory compliance"
-    ],
-    strengths: [
-      "Scalability",
-      "Digital transformation trend",
-      "Remote work enablement",
-      "Innovation potential"
-    ],
-    recommendations: [
-      "Focus on unique value proposition",
-      "Invest in cybersecurity",
-      "Consider freemium model",
-      "Build strong tech support"
-    ],
-    questions: {
-      market_validation: "Have you conducted any market research or validation? What were the results?",
-      tech_stack: "What technology stack are you planning to use?",
-      monetization: "What's your monetization strategy?",
-      scaling: "How do you plan to scale the technology?",
-      security: "How will you handle data security and privacy?"
-    }
+const functions = getFunctions();
+const generateQuestions = httpsCallable(functions, 'generateStartupQuestions');
+const analyzeWithGemini = httpsCallable(functions, 'analyzeStartupIdea');
+
+// Industry categories for initial categorization
+const industryCategories = {
+  AI_TECH: {
+    keywords: ['ai', 'machine learning', 'artificial intelligence', 'deep learning', 'nlp', 'automation'],
+    businessModels: ['SaaS', 'API Services', 'Enterprise Solutions', 'B2B', 'B2C'],
+    revenueStreams: ['Subscription', 'Usage-based', 'Licensing', 'Professional Services']
   },
-  retail: {
-    marketSize: "The retail market size varies by region and segment...",
-    competitors: ["Amazon", "Walmart", "Local retailers", "Online marketplaces"],
-    risks: [
-      "High competition",
-      "Inventory management",
-      "Supply chain disruptions",
-      "Changing consumer preferences"
-    ],
-    strengths: [
-      "Direct customer interaction",
-      "Brand building potential",
-      "Multiple revenue streams",
-      "Local market presence"
-    ],
-    recommendations: [
-      "Focus on customer experience",
-      "Implement omnichannel strategy",
-      "Optimize inventory management",
-      "Build customer loyalty program"
-    ],
-    questions: {
-      location: "Where do you plan to establish your retail presence?",
-      inventory: "How will you manage inventory and suppliers?",
-      customer_service: "What's your customer service strategy?",
-      competition: "How will you compete with existing retailers?",
-      marketing: "What marketing channels will you use?"
-    }
+  E_COMMERCE: {
+    keywords: ['online store', 'e-commerce', 'marketplace', 'retail', 'shopping'],
+    businessModels: ['B2C Marketplace', 'B2B Platform', 'D2C Brand', 'Subscription Box'],
+    revenueStreams: ['Commission', 'Subscription', 'Advertising', 'Premium Listings']
   },
-  food: {
-    marketSize: "The food service industry market size...",
-    competitors: ["Local restaurants", "Food chains", "Delivery services"],
-    risks: [
-      "Food safety regulations",
-      "High operational costs",
-      "Staff turnover",
-      "Supply chain management"
-    ],
-    strengths: [
-      "Essential service",
-      "Regular customer base",
-      "Multiple revenue streams",
-      "Brand potential"
-    ],
-    recommendations: [
-      "Focus on food quality",
-      "Optimize operations",
-      "Build delivery partnerships",
-      "Implement loyalty program"
-    ],
-    questions: {
-      cuisine: "What type of cuisine or food products will you offer?",
-      location: "Where will your food business be located?",
-      delivery: "Will you offer delivery services? How?",
-      sourcing: "How will you source your ingredients?",
-      regulations: "How will you handle food safety regulations?"
-    }
+  HEALTHCARE: {
+    keywords: ['health', 'medical', 'wellness', 'fitness', 'telemedicine'],
+    businessModels: ['Telemedicine', 'Health Tech', 'Medical Devices', 'Wellness Platform'],
+    revenueStreams: ['Insurance', 'Subscription', 'Per-visit', 'Device Sales']
   },
-  healthcare: {
-    marketSize: "The healthcare market size continues to grow...",
-    competitors: ["Hospitals", "Clinics", "Health tech companies"],
-    risks: [
-      "Regulatory compliance",
-      "Medical liability",
-      "Technology integration",
-      "Data security"
-    ],
-    strengths: [
-      "Essential service",
-      "Growing demand",
-      "High value service",
-      "Impact potential"
-    ],
-    recommendations: [
-      "Ensure regulatory compliance",
-      "Invest in technology",
-      "Build professional network",
-      "Focus on patient experience"
-    ],
-    questions: {
-      regulations: "How will you handle healthcare regulations and compliance?",
-      technology: "What healthcare technology will you use?",
-      patients: "Who is your target patient demographic?",
-      insurance: "How will you handle insurance and payments?",
-      expertise: "What medical expertise do you have access to?"
-    }
+  FINTECH: {
+    keywords: ['finance', 'banking', 'payment', 'investment', 'insurance'],
+    businessModels: ['P2P Platform', 'Digital Banking', 'Investment App', 'Insurance Tech'],
+    revenueStreams: ['Transaction Fees', 'Interest', 'Premium Features', 'Commission']
   },
-  other: {
-    marketSize: "Market size varies by specific implementation...",
-    competitors: ["Established businesses", "New entrants", "Alternative solutions"],
-    risks: [
-      "Market uncertainty",
-      "Resource constraints",
-      "Competition",
-      "Regulatory changes"
-    ],
-    strengths: [
-      "Innovation potential",
-      "Market opportunity",
-      "Flexibility",
-      "First-mover advantage"
-    ],
-    recommendations: [
-      "Conduct market research",
-      "Start small and iterate",
-      "Focus on customer feedback",
-      "Build strong team"
-    ],
-    questions: {
-      target_market: "Who is your target market?",
-      revenue_model: "How will you generate revenue?",
-      competition: "Who are your main competitors?",
-      resources: "What resources do you currently have?",
-      challenges: "What are your biggest challenges?"
-    }
+  EDTECH: {
+    keywords: ['education', 'learning', 'teaching', 'training', 'courses'],
+    businessModels: ['Online Learning', 'B2B Training', 'Tutoring Platform', 'Educational Content'],
+    revenueStreams: ['Course Fees', 'Subscription', 'Enterprise Licenses', 'Certification']
   }
 };
 
-const detectIndustry = (idea) => {
-  const keywords = {
-    technology: ['app', 'software', 'tech', 'digital', 'online', 'platform', 'AI', 'blockchain'],
-    retail: ['store', 'shop', 'retail', 'ecommerce', 'products', 'marketplace'],
-    food: ['restaurant', 'food', 'delivery', 'catering', 'kitchen'],
-    healthcare: ['health', 'medical', 'wellness', 'fitness', 'care']
-  };
-
-  for (const [industry, industryKeywords] of Object.entries(keywords)) {
-    if (industryKeywords.some(keyword => 
-      idea.toLowerCase().includes(keyword.toLowerCase())
-    )) {
-      return industry;
-    }
-  }
-  return 'other';
-};
-
-export const analyzeStartupIdea = async (idea) => {
+// Detect industry category
+export async function detectIndustry(idea) {
   try {
-    console.log('Analyzing startup idea...');
-    const industry = detectIndustry(idea);
-    const template = templates[industry] || templates.other;
+    const ideaLower = idea.toLowerCase();
+    let maxMatches = 0;
+    let detectedCategory = 'AI_TECH';
+    let confidence = 0;
 
-    // Extract key information from the idea
-    const keywordMap = {
-      technology: ['tech', 'software', 'platform', 'app', 'digital', 'online', 'AI', 'automation'],
-      market_focus: ['B2B', 'B2C', 'enterprise', 'consumer', 'retail', 'service'],
-      innovation: ['innovative', 'unique', 'novel', 'new', 'revolutionary', 'disruptive'],
-      scalability: ['scale', 'growth', 'expand', 'global', 'market'],
-      problem_solving: ['solve', 'improve', 'enhance', 'optimize', 'streamline']
-    };
+    for (const [category, info] of Object.entries(industryCategories)) {
+      const matches = info.keywords.filter(keyword => 
+        ideaLower.includes(keyword.toLowerCase())
+      ).length;
 
-    const analysis = {
-      startupIdea: idea,
-      industry: industry,
-      marketInsights: {
-        marketSize: template.marketSize,
-        targetSegments: [],
-        growthPotential: 'high'
-      },
-      competitiveAnalysis: {
-        competitors: template.competitors,
-        uniqueAdvantages: [],
-        marketPosition: 'emerging'
-      },
-      riskAssessment: {
-        keyRisks: template.risks,
-        mitigationStrategies: []
-      },
-      recommendations: template.recommendations,
-      keywordAnalysis: {
-        technology: [],
-        market_focus: [],
-        innovation: [],
-        scalability: [],
-        problem_solving: []
+      if (matches > maxMatches) {
+        maxMatches = matches;
+        detectedCategory = category;
+        confidence = Math.min(matches / info.keywords.length, 1);
       }
-    };
-
-    // Analyze keywords in the idea
-    for (const [category, keywords] of Object.entries(keywordMap)) {
-      analysis.keywordAnalysis[category] = keywords.filter(keyword => 
-        idea.toLowerCase().includes(keyword.toLowerCase())
-      );
     }
 
-    return analysis;
+    return {
+      category: detectedCategory,
+      subcategories: Object.keys(industryCategories).filter(cat => cat !== detectedCategory),
+      confidence: confidence,
+      reasoning: `Detected ${maxMatches} keyword matches for ${detectedCategory}`
+    };
   } catch (error) {
-    console.error('Error analyzing startup idea:', error);
+    console.error('Error detecting industry:', error);
     throw error;
   }
-};
+}
 
-// Essential questions for startup analysis
-const essentialQuestions = [
-  {
-    id: 'startup_idea',
-    question: "Describe your startup idea and the main problem it solves.",
-    type: 'text'
-  },
-  {
-    id: 'target_market',
-    question: "Who is your target market (be specific about demographics, needs, and market size)?",
-    type: 'text'
-  },
-  {
-    id: 'unique_value',
-    question: "What makes your solution unique compared to existing alternatives? List your key competitive advantages.",
-    type: 'text'
-  },
-  {
-    id: 'business_model',
-    question: "How will you make money? Describe your revenue streams and pricing strategy.",
-    type: 'text'
-  },
-  {
-    id: 'go_to_market',
-    question: "What's your go-to-market strategy and what resources (funding, team, technology) do you need to launch?",
-    type: 'text'
-  }
-];
-
-export const generateFollowUpQuestions = async (idea, industry, previousAnswers = {}) => {
+// Analyze startup idea using Gemini
+export async function analyzeStartupIdea(idea, category = 'AI_TECH', answers = {}) {
   try {
-    const currentQuestionCount = Object.keys(previousAnswers).length;
-    
-    // If we've already asked 5 questions, return empty array to trigger analysis
-    if (currentQuestionCount >= 5) {
-      return { questions: [] };
+    const result = await analyzeWithGemini({
+      idea,
+      category,
+      answers
+    });
+
+    // If Gemini analysis fails, fall back to template-based analysis
+    if (!result.data) {
+      return generateTemplateAnalysis(idea, category, answers);
     }
 
-    // Return the next essential question
-    return {
-      questions: [essentialQuestions[currentQuestionCount]]
-    };
-
+    return result.data;
   } catch (error) {
-    console.error('Error generating follow-up questions:', error);
-    
-    // Use essential questions as fallback
-    const currentQuestionCount = Object.keys(previousAnswers).length;
-    return {
-      questions: [essentialQuestions[currentQuestionCount]]
-    };
+    console.error('Error analyzing with Gemini:', error);
+    // Fallback to template analysis on error
+    return generateTemplateAnalysis(idea, category, answers);
   }
-};
+}
+
+// Generate dynamic follow-up questions using Gemini
+export async function generateFollowUpQuestions(idea, category, previousAnswers = {}) {
+  try {
+    const result = await generateQuestions({
+      idea,
+      industry: category,
+      previousAnswers
+    });
+
+    const response = result.data;
+
+    // Ensure we have valid questions
+    if (!response || !response.questions || response.questions.length === 0) {
+      return generateDefaultQuestions(category);
+    }
+
+    return {
+      questions: response.questions,
+      currentStage: determineCurrentStage(previousAnswers)
+    };
+  } catch (error) {
+    console.error('Error generating questions:', error);
+    return generateDefaultQuestions(category);
+  }
+}
+
+// Fallback function for template-based analysis
+function generateTemplateAnalysis(idea, category, answers) {
+  const categoryInfo = industryCategories[category] || industryCategories.AI_TECH;
+  
+  return {
+    category: category,
+    businessModel: {
+      recommendedModels: categoryInfo.businessModels.slice(0, 2),
+      reasoning: [
+        'Based on industry trends and market demand',
+        'Aligned with target audience needs'
+      ],
+      risks: [
+        'Market competition',
+        'Technology adoption barriers',
+        'Regulatory compliance'
+      ],
+      opportunities: [
+        'Growing market demand',
+        'Digital transformation trends',
+        'Innovation potential'
+      ]
+    },
+    revenueStrategy: {
+      primaryRevenue: categoryInfo.revenueStreams[0],
+      secondaryRevenue: categoryInfo.revenueStreams.slice(1),
+      pricingStrategy: 'Tiered pricing with freemium model',
+      monetizationTimeline: 'Short-term: Freemium, Medium-term: Premium features, Long-term: Enterprise solutions'
+    },
+    marketInsights: {
+      targetSegments: answers.target_audience ? answers.target_audience.split(',').map(s => s.trim()) : [],
+      problemStatement: answers.problem_validation || '',
+      marketSize: answers.market_size || 'To be determined',
+      competitors: answers.competition ? answers.competition.split(',').map(s => s.trim()) : []
+    },
+    executionPlan: {
+      goToMarket: answers.go_to_market || 'To be determined',
+      resourceNeeds: answers.resource_needs || 'To be determined'
+    }
+  };
+}
+
+// Generate default questions if Gemini fails
+function generateDefaultQuestions(category) {
+  const stage = 'IDEATION';
+  const questions = [
+    {
+      id: 'problem_validation',
+      question: 'What specific problem does your startup solve?',
+      type: 'text',
+      required: true
+    },
+    {
+      id: 'target_audience',
+      question: 'Who is your primary target audience?',
+      type: 'text',
+      required: true
+    }
+  ];
+
+  return {
+    questions: questions,
+    currentStage: stage
+  };
+}
+
+// Determine the current stage based on previous answers
+function determineCurrentStage(answers) {
+  if (!answers.problem_validation || !answers.target_audience) {
+    return 'IDEATION';
+  }
+  if (!answers.market_size || !answers.competition) {
+    return 'VALIDATION';
+  }
+  if (!answers.revenue_model || !answers.pricing_strategy) {
+    return 'BUSINESS_MODEL';
+  }
+  return 'EXECUTION';
+}
