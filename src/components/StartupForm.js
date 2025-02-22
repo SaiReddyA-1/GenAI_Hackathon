@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   TextField,
   Button,
@@ -26,7 +27,7 @@ import {
   Divider,
 } from '@mui/material';
 import { db } from '../config/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { analyzeStartupIdea } from '../services/openai';
 import { getCompetitorsWithGemini, getStartupInsightsWithGemini } from '../services/gemini';
 import useAuth from '../hooks/useAuth';
@@ -122,6 +123,7 @@ const STEPS = [
 ];
 
 const StartupForm = () => {
+  const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
@@ -397,6 +399,28 @@ const StartupForm = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
+  const saveToFirebase = async (marketData) => {
+    try {
+      const docRef = await addDoc(collection(db, 'marketAnalysis'), {
+        userId: user.uid,
+        timestamp: serverTimestamp(),
+        marketData: {
+          ...marketData,
+          swot: marketData.swot || {
+            strengths: [],
+            weaknesses: [],
+            opportunities: [],
+            threats: []
+          }
+        }
+      });
+      return docRef.id;
+    } catch (err) {
+      console.error('Error saving to Firebase:', err);
+      throw err;
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       setLoadingStage('Fetching competitors...');
@@ -416,9 +440,44 @@ const StartupForm = () => {
       }
 
       setInsights(insightsList);
+
+      // Transform market data for charts
+      const marketData = {
+        demographics: insightsList.demographics,
+        marketSize: [
+          { year: '2020', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 0.6 },
+          { year: '2021', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 0.8 },
+          { year: '2022', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 0.9 },
+          { year: '2023', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) },
+          { year: '2024', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 1.2 },
+          { year: '2025', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 1.4 }
+        ],
+        competitors: competitorsList.map(comp => ({
+          name: comp.name,
+          marketShare: comp.marketShare || 0,
+          targetMarket: comp.targetAudience,
+          strategies: comp.marketingStrategies
+        })),
+        swot: insightsList.swot // Add SWOT data here
+      };
+
+      setLoadingStage('Saving analysis...');
+      
+      // Save to Firebase first
+      const analysisId = await saveToFirebase(marketData);
+      
+      // Store the analysis ID along with the market data
+      const dataToStore = {
+        ...marketData,
+        analysisId
+      };
+      
+      // Store in localStorage for immediate use
+      localStorage.setItem('marketAnalysisData', JSON.stringify(dataToStore));
+
       setLoadingStage('');
       setActiveStep(activeStep + 1);
-
+      
     } catch (err) {
       console.error('Analysis error:', err);
       setError(err.message || 'Failed to analyze startup idea. Please try again.');
@@ -489,6 +548,17 @@ const StartupForm = () => {
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold text-center mb-8">Startup Insights Analysis</h1>
         
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate('/market-charts')}
+            size="large"
+          >
+            View Market Analysis Charts
+          </Button>
+        </Box>
+
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {renderInsightsCard("Risks & Solutions", {
             "Key Risks": insights.risks?.potential_risks || [],

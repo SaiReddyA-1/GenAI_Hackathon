@@ -9,6 +9,7 @@ import Auth from './components/Auth';
 import Landing from './components/Landing';
 import useAuth from './hooks/useAuth';
 import ChatBot from './components/ChatBot';
+import MarketChartsDashboard from './components/MarketChartsDashboard';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -88,6 +89,18 @@ function App() {
                   ) : (
                     <StartupForm onAnalysisComplete={handleAnalysisComplete} />
                   )}
+                </Container>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/market-charts"
+            element={
+              <ProtectedRoute>
+                <Container maxWidth="lg">
+                  <MarketChartsDashboard 
+                    marketData={JSON.parse(localStorage.getItem('marketAnalysisData'))}
+                  />
                 </Container>
               </ProtectedRoute>
             }
