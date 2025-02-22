@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   TextField,
   Button,
-  Paper,
   Typography,
   CircularProgress,
   Alert,
@@ -21,12 +20,46 @@ import {
   InputLabel,
   FormHelperText,
   InputAdornment,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import { db } from '../config/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { analyzeStartupIdea } from '../services/openai';
 import useAuth from '../hooks/useAuth';
 import AnalysisDashboard from './AnalysisDashboard';
+
+// Sample test data for quick form filling
+const SAMPLE_DATA = {
+  // Basic Startup Info
+  startupIdea: "AI-powered health monitoring wearable that predicts potential health issues before they become serious. The device uses advanced machine learning to analyze real-time health data and provides early warnings for various medical conditions.",
+  industry: 'HEALTHCARE',
+  problemSolution: "Traditional health monitoring is reactive rather than proactive. Our solution uses AI to predict health issues days or weeks before symptoms appear, potentially saving lives through early intervention.",
+
+  // Market & Competition
+  operationLocation: 'Global, starting with US and Europe',
+  targetUsers: 'Consumers',
+  hasCompetitors: 'yes',
+  competitors: 'Apple Health, Fitbit, Samsung Health',
+  userAcquisition: 'Partnerships',
+
+  // Financial & Growth
+  needFunding: 'yes',
+  initialInvestment: '5000000',
+  businessModel: 'Subscription',
+  revenuePerUser: '29.99',
+  breakEvenTime: '2 years',
+
+  // Growth & Market
+  marketSize: 'Large',
+  userGrowthRate: '45',
+  supportingTrends: ['AI Boom', 'Digital Payments', 'Remote Work'],
+
+  // AI & Reports
+  needAiStrategies: 'yes',
+  needBenchmarking: 'yes',
+  needPdfReport: 'yes'
+};
 
 const INDUSTRIES = [
   'AI',
@@ -177,12 +210,29 @@ const StartupForm = () => {
     }
   };
 
+  // Function to fill form with sample data
+  const fillWithSampleData = () => {
+    setFormData(SAMPLE_DATA);
+  };
+
   const renderBasicInfo = () => (
     <Card sx={{ mt: 2, p: 2 }}>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
-          1️⃣ Basic Startup Idea & Category Detection
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6" gutterBottom>
+            1️⃣ Basic Startup Idea & Category Detection
+          </Typography>
+          <Tooltip title="Fill form with sample data for testing">
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={fillWithSampleData}
+              sx={{ ml: 2 }}
+            >
+              Test Data
+            </Button>
+          </Tooltip>
+        </Box>
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <TextField
