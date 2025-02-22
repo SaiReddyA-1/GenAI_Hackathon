@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaMoon, FaSun, FaArrowRight, FaCheck, FaRocket, FaChartLine, FaRobot, FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaMoon, FaSun, FaArrowRight, FaCheck, FaRocket, FaChartLine, FaRobot, FaSignOutAlt, FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa';
+import { signOut } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import useAuth from '../hooks/useAuth';
 import StarRating from './StarRating';
 import '../styles/Landing.css';
 import heroIllustration from '../assets/hero-illustration.svg';
@@ -13,7 +16,10 @@ import serviceIcons from '../assets/service-icons.svg';
 const Landing = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeService, setActiveService] = useState('big-data');
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const services = {
     'big-data': {
@@ -43,6 +49,31 @@ const Landing = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleSearch = () => {
+    if (!user) {
+      // Store search query in session storage before redirecting
+      sessionStorage.setItem('pendingSearch', searchQuery);
+      navigate('/login');
+    } else {
+      // Navigate to dashboard with the search query
+      navigate('/dashboard', { state: { startupIdea: searchQuery } });
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="landing">
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
@@ -61,7 +92,19 @@ const Landing = () => {
             >
               {isDarkMode ? <FaSun /> : <FaMoon />}
             </button>
-            <Link to="/signin" className="sign-in-btn">Sign In</Link>
+            {user ? (
+              <>
+                <span className="user-name">{user.email}</span>
+                <button className="sign-out-btn" onClick={handleSignOut}>
+                  <FaSignOutAlt /> Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="nav-link">Sign In</Link>
+                <Link to="/login" className="sign-in-btn">Sign Up</Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -82,10 +125,14 @@ const Landing = () => {
               type="text" 
               className="search-input"
               placeholder="Enter your startup idea here..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
             />
-            <button className="search-button">Analyze Now</button>
+            <button className="search-button" onClick={handleSearch}>
+              Analyze Now
+            </button>
           </div>
-          
         </div>
       </section>
 

@@ -10,6 +10,25 @@ import Auth from './components/Auth';
 import Landing from './components/Landing';
 import useAuth from './hooks/useAuth';
 
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+  
+  return children;
+};
+
 function App() {
   const { user, loading } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
@@ -46,14 +65,7 @@ function App() {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-          }}
-        >
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
           <CircularProgress />
         </Box>
       </ThemeProvider>
@@ -67,32 +79,34 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route
-            path="/dashboard"
+            path="/dashboard/*"
             element={
-              <>
+              <ProtectedRoute>
                 <Header darkMode={darkMode} setDarkMode={setDarkMode} />
                 <Container maxWidth="lg">
-                  {!user ? (
-                    <Navigate to="/login" />
-                  ) : analysisData ? (
+                  {analysisData ? (
                     <AnalysisDashboard data={analysisData} />
                   ) : (
                     <StartupForm onAnalysisComplete={handleAnalysisComplete} />
                   )}
                 </Container>
-              </>
+              </ProtectedRoute>
             }
           />
           <Route 
             path="/login" 
             element={
-              <>
-                <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-                <Container maxWidth="lg">
-                  {!user ? <Auth /> : <Navigate to="/dashboard" />}
-                </Container>
-              </>
-            } 
+              user ? (
+                <Navigate to="/dashboard" />
+              ) : (
+                <>
+                  <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+                  <Container maxWidth="lg">
+                    <Auth />
+                  </Container>
+                </>
+              )
+            }
           />
         </Routes>
       </Router>
