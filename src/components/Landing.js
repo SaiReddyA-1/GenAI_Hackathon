@@ -222,7 +222,6 @@ const Landing = () => {
                 <span>AI-Powered Recommendations</span>
               </div>
             </div>
-            <button className="learn-more-btn">Learn More</button>
           </div>
         </div>
       </section>
@@ -269,7 +268,6 @@ const Landing = () => {
         <div className="services-content">
           <div className="section-label">OUR SERVICES</div>
           <h2>Explore Our Data Services</h2>
-          
           <div className="services-tabs">
             <div 
               className={`service-tab ${activeService === 'machine-learning' ? 'active' : ''}`}
@@ -328,6 +326,20 @@ const Landing = () => {
               <div className="client-info">
                 <h4>Sarah Williams</h4>
                 <span>Startup Founder</span>
+              </div>
+            </div>
+
+            <div className="testimonial-card">
+              <div className="testimonial-header">
+                <img src="https://randomuser.me/api/portraits/women/28.jpg" alt="Emily Rodriguez" className="client-image" />
+                <StarRating rating={5} />
+              </div>
+              <p className="testimonial-text">
+                As a first-time founder, StartupLens was invaluable. The AI recommendations helped me pivot my business model and find the perfect market fit. Highly recommended!
+              </p>
+              <div className="client-info">
+                <h4>Emily Rodriguez</h4>
+                <span>E-commerce Founder</span>
               </div>
             </div>
           </div>
