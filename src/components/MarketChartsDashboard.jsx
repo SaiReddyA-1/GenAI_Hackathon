@@ -11,7 +11,7 @@ import RiskAnalysis from './charts/RiskAnalysis';
 import RevenueAnalysis from './charts/RevenueAnalysis';
 import MarketingAnalysis from './charts/MarketingAnalysis';
 import useAuth from '../hooks/useAuth';
-
+import StartupAnalysis from './StartupAnalysis';
 const MarketChartsDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -94,6 +94,7 @@ const MarketChartsDashboard = () => {
     );
   }
 
+
   if (!marketData || !analysisId) {
     return (
       <Box sx={{ p: 3 }}>
@@ -132,7 +133,7 @@ const MarketChartsDashboard = () => {
           Back to Dashboard
         </Button>
       </Box>
-
+      
       <Box sx={{ display: 'grid', gap: 4 }}>
         {/* Market Share and Competitors */}
         <Box sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
@@ -159,23 +160,8 @@ const MarketChartsDashboard = () => {
         </Box>
 
         {/* Risk Analysis */}
-        <Box sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
-          <h2>Risks & Solutions</h2>
-          <RiskAnalysis data={marketData} />
-        </Box>
-
-        {/* Marketing Analysis */}
-        <Box sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
-          <h2>Marketing Strategy</h2>
-          <MarketingAnalysis data={marketData} />
-        </Box>
-
-        {/* Revenue Analysis */}
-        <Box sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
-          <h2>Revenue Streams</h2>
-          <RevenueAnalysis data={marketData} />
-        </Box>
-      </Box>
+      {/* <StartupAnalysis /> */}
+      </Box>  
     </Box>
   );
 };

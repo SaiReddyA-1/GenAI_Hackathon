@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import MarketGrowthChart from './charts/MarketGrowthChart';
 import CompetitorChart from './charts/CompetitorChart';
 import FundingChart from './charts/FundingChart';
 import UserGrowthChart from './charts/UserGrowthChart';
 import NavbarWrapper from './NavbarWrapper';
+import { analyzeMarketData } from '../utils/geminiApi';
 
 const StartupAnalysis = ({ analysis }) => {
   const competitors = [
@@ -42,6 +43,22 @@ const StartupAnalysis = ({ analysis }) => {
     'Name 3',
     'Name 4',
   ];
+
+  const [marketData, setMarketData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchMarketData = async () => {
+      try {
+        const data = await analyzeMarketData('your_topic_here'); // Replace 'your_topic_here' with the actual topic
+        setMarketData(data);
+      } catch (error) {
+        setError('Failed to fetch market data');
+        console.error('Error fetching market data:', error);
+      }
+    };
+    fetchMarketData();
+  }, []);
 
   return (
     <>
@@ -141,6 +158,19 @@ const StartupAnalysis = ({ analysis }) => {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Market Data */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-700">Market Data</h2>
+          {error && <p>{error}</p>}
+          {marketData ? (
+            <div>
+              <pre>{JSON.stringify(marketData, null, 2)}</pre>
+            </div>
+          ) : (
+            <p>Loading market data...</p>
+          )}
         </div>
       </div>
     </>

@@ -546,7 +546,7 @@ const StartupForm = () => {
 
     return (
       <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold text-center mb-8">Startup Insights Analysis</h1>
+        {/* <h1 className="text-3xl font-bold text-center mb-8">Startup Insights Analysis</h1> */}
         
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
           <Button
@@ -560,32 +560,41 @@ const StartupForm = () => {
         </Box>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Risks & Solutions card hidden
           {renderInsightsCard("Risks & Solutions", {
-            "Key Risks": insights.risks?.potential_risks || [],
-            "Solutions": insights.risks?.solutions || []
+            "Key Risks": insights.risksAndSolutions?.key_risks || [],
+            "Solutions": insights.risksAndSolutions?.solutions || []
           }, "🛡️")}
-          
+          */}
+          {/* Market Analysis card hidden
           {renderInsightsCard("Market Analysis", {
             "Current Growth Rate": insights.marketAnalysis?.current_growth_rate,
             "Market Trends": insights.marketAnalysis?.key_market_trends || [],
             "Projected Growth": insights.marketAnalysis?.projected_growth
           }, "📈")}
+          */}
           
+          {/* Audience & Marketing card hidden
           {renderInsightsCard("Audience & Marketing", {
             "Target Audience": insights.audienceAndMarketing?.target_audience,
             "Marketing Strategy": insights.audienceAndMarketing?.marketing_strategies || [],
             "Investor Appeal": insights.audienceAndMarketing?.investor_appeal_points || []
           }, "🎯")}
+          */}
           
+          {/* Revenue Streams card hidden
           {renderInsightsCard("Revenue Streams", {
             "Primary Revenue": insights.revenueStreams?.primary_revenue_sources || [],
             "Passive Income": insights.revenueStreams?.passive_income_opportunities || [],
             "Capital Raising": insights.revenueStreams?.capital_raising_strategies || []
           }, "💰")}
+          */}
           
+          {/* Suggested Names card hidden
           {renderInsightsCard("Suggested Names", 
             insights.startupNames?.suggested_modern_names || [], 
             "✨")}
+          */}
         </div>
       </div>
     );
