@@ -4,6 +4,7 @@ import {
   Typography,
   Grid,
   Paper,
+  CircularProgress,
 } from '@mui/material';
 import {
   LineChart,
@@ -14,6 +15,13 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
 } from 'recharts';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import GroupIcon from '@mui/icons-material/Group';
@@ -21,14 +29,35 @@ import SearchIcon from '@mui/icons-material/Search';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 
 const AnalysisDashboard = ({ analysis }) => {
-  const mockData = [
-    { name: 'Jan', marketSize: 4000, competitors: 2000, growthPotential: 2500 },
-    { name: 'Feb', marketSize: 3000, competitors: 1500, growthPotential: 2300 },
-    { name: 'Mar', marketSize: 2000, competitors: 9800, growthPotential: 2200 },
-    { name: 'Apr', marketSize: 2780, competitors: 3908, growthPotential: 2400 },
-    { name: 'May', marketSize: 1890, competitors: 4800, growthPotential: 2100 },
-    { name: 'Jun', marketSize: 2390, competitors: 3800, growthPotential: 2500 },
-  ];
+  if (!analysis) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const {
+    overview,
+    marketAnalysis,
+    financialProjections,
+    aiRecommendations,
+    visualData
+  } = analysis;
+
+  // Format currency
+  const formatCurrency = (value) => {
+    if (value >= 1000000000) {
+      return `$${(value / 1000000000).toFixed(1)}B`;
+    }
+    if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(1)}M`;
+    }
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(1)}K`;
+    }
+    return `$${value}`;
+  };
 
   return (
     <Box sx={{ p: 3, bgcolor: '#fff' }}>
@@ -41,7 +70,7 @@ const AnalysisDashboard = ({ analysis }) => {
               <Typography variant="subtitle1">Market Growth</Typography>
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#10b981' }}>
-              +24.3%
+              +{overview.growthRate}%
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Year over year
@@ -53,13 +82,13 @@ const AnalysisDashboard = ({ analysis }) => {
           <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <GroupIcon sx={{ color: '#6366f1', mr: 1 }} />
-              <Typography variant="subtitle1">Target Users</Typography>
+              <Typography variant="subtitle1">Target Market</Typography>
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#6366f1' }}>
-              2.4M
+              {overview.marketSize}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Potential customers
+              Market Size
             </Typography>
           </Paper>
         </Grid>
@@ -71,7 +100,7 @@ const AnalysisDashboard = ({ analysis }) => {
               <Typography variant="subtitle1">Competitors</Typography>
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#8b5cf6' }}>
-              12
+              {overview.competitorCount}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Direct competitors
@@ -83,63 +112,94 @@ const AnalysisDashboard = ({ analysis }) => {
           <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <AttachMoneyIcon sx={{ color: '#f59e0b', mr: 1 }} />
-              <Typography variant="subtitle1">Market Size</Typography>
+              <Typography variant="subtitle1">Initial Investment</Typography>
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#f59e0b' }}>
-              $4.2B
+              {formatCurrency(financialProjections.estimatedFunding.initialFunding)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Total addressable market
+              Required funding
             </Typography>
           </Paper>
         </Grid>
       </Grid>
 
       {/* Market Trends Chart */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>Market Trends Analysis</Typography>
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={8}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Revenue & Growth Projections</Typography>
+          <Box sx={{ height: 300, width: '100%' }}>
+            <ResponsiveContainer>
+              <LineChart data={visualData.marketTrendChart}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#8b5cf6"
+                  name="Revenue"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="userBase"
+                  stroke="#10b981"
+                  name="User Base"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Competitor Analysis</Typography>
+          <Box sx={{ height: 300, width: '100%' }}>
+            <ResponsiveContainer>
+              <RadarChart data={visualData.competitorComparisonData.competitors}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="name" />
+                <PolarRadiusAxis />
+                <Radar
+                  name="Score"
+                  dataKey="scores"
+                  stroke="#8b5cf6"
+                  fill="#8b5cf6"
+                  fillOpacity={0.6}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </Box>
+        </Grid>
+      </Grid>
+
+      {/* Financial Projections */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>Financial Projections</Typography>
         <Box sx={{ height: 300, width: '100%' }}>
           <ResponsiveContainer>
-            <LineChart data={mockData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
+            <BarChart data={visualData.projectionCharts.financial}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
               <Tooltip />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="marketSize"
-                stroke="#8b5cf6"
-                name="Market Size"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="competitors"
-                stroke="#10b981"
-                name="Competitors"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="growthPotential"
-                stroke="#f59e0b"
-                name="Growth Potential"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-              />
-            </LineChart>
+              <Bar dataKey="revenue" fill="#10b981" name="Revenue" />
+              <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
+              <Bar dataKey="profit" fill="#8b5cf6" name="Profit" />
+            </BarChart>
           </ResponsiveContainer>
         </Box>
       </Box>
 
       {/* AI Insights */}
-      <Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">AI-Generated Insights</Typography>
-        </Box>
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>AI-Generated Insights</Typography>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Box sx={{ p: 2, bgcolor: '#e0e7ff', borderRadius: 1 }}>
@@ -147,27 +207,27 @@ const AnalysisDashboard = ({ analysis }) => {
                 Market Opportunity
               </Typography>
               <Typography variant="body1" sx={{ color: '#4338ca' }}>
-                Strong growth potential in the target market with increasing demand for innovative solutions.
+                {marketAnalysis.trendAnalysis}
               </Typography>
             </Box>
           </Grid>
           <Grid item xs={12}>
             <Box sx={{ p: 2, bgcolor: '#dcfce7', borderRadius: 1 }}>
               <Typography variant="subtitle1" sx={{ color: '#166534', fontWeight: 'bold', mb: 1 }}>
-                Competitive Advantage
+                Growth Strategy
               </Typography>
               <Typography variant="body1" sx={{ color: '#166534' }}>
-                Unique value proposition with limited direct competition in the specific niche.
+                {aiRecommendations.growthStrategy}
               </Typography>
             </Box>
           </Grid>
           <Grid item xs={12}>
             <Box sx={{ p: 2, bgcolor: '#fef3c7', borderRadius: 1 }}>
               <Typography variant="subtitle1" sx={{ color: '#92400e', fontWeight: 'bold', mb: 1 }}>
-                Risk Factors
+                Risk Mitigation
               </Typography>
               <Typography variant="body1" sx={{ color: '#92400e' }}>
-                Consider regulatory compliance and initial market penetration challenges.
+                {aiRecommendations.riskMitigation.join(', ')}
               </Typography>
             </Box>
           </Grid>

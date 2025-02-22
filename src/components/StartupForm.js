@@ -29,38 +29,6 @@ import { analyzeStartupIdea } from '../services/openai';
 import useAuth from '../hooks/useAuth';
 import AnalysisDashboard from './AnalysisDashboard';
 
-// Sample test data for quick form filling
-const SAMPLE_DATA = {
-  // Basic Startup Info
-  startupIdea: "AI-powered health monitoring wearable that predicts potential health issues before they become serious. The device uses advanced machine learning to analyze real-time health data and provides early warnings for various medical conditions.",
-  industry: 'HEALTHCARE',
-  problemSolution: "Traditional health monitoring is reactive rather than proactive. Our solution uses AI to predict health issues days or weeks before symptoms appear, potentially saving lives through early intervention.",
-
-  // Market & Competition
-  operationLocation: 'Global, starting with US and Europe',
-  targetUsers: 'Consumers',
-  hasCompetitors: 'yes',
-  competitors: 'Apple Health, Fitbit, Samsung Health',
-  userAcquisition: 'Partnerships',
-
-  // Financial & Growth
-  needFunding: 'yes',
-  initialInvestment: '5000000',
-  businessModel: 'Subscription',
-  revenuePerUser: '29.99',
-  breakEvenTime: '2 years',
-
-  // Growth & Market
-  marketSize: 'Large',
-  userGrowthRate: '45',
-  supportingTrends: ['AI Boom', 'Digital Payments', 'Remote Work'],
-
-  // AI & Reports
-  needAiStrategies: 'yes',
-  needBenchmarking: 'yes',
-  needPdfReport: 'yes'
-};
-
 const INDUSTRIES = [
   'AI',
   'E-commerce',
@@ -119,12 +87,45 @@ const MARKET_TRENDS = [
   'Other'
 ];
 
+// Sample test data for quick form filling
+const SAMPLE_DATA = {
+  // Basic Startup Info
+  startupIdea: "AI-powered health monitoring wearable that predicts potential health issues before they become serious. The device uses advanced machine learning to analyze real-time health data and provides early warnings for various medical conditions.",
+  industry: 'Healthcare',
+  problemSolution: "Traditional health monitoring is reactive rather than proactive. Our solution uses AI to predict health issues days or weeks before symptoms appear, potentially saving lives through early intervention.",
+
+  // Market & Competition
+  operationLocation: 'Global, starting with US and Europe',
+  targetUsers: 'Consumers',
+  hasCompetitors: 'yes',
+  competitors: 'Apple Health, Fitbit, Samsung Health',
+  userAcquisition: 'Partnerships',
+
+  // Financial & Growth
+  needFunding: 'yes',
+  initialInvestment: '5000000',
+  businessModel: 'Subscription',
+  revenuePerUser: '29.99',
+  breakEvenTime: '2 years',
+
+  // Growth & Market
+  marketSize: 'Large',
+  userGrowthRate: '45',
+  supportingTrends: ['AI Boom', 'Digital Payments'],
+
+  // AI & Reports
+  needAiStrategies: 'yes',
+  needBenchmarking: 'yes',
+  needPdfReport: 'yes'
+};
+
 const StartupForm = () => {
   const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [analysis, setAnalysis] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
 
   const [formData, setFormData] = useState({
     // Basic Startup Info
@@ -175,7 +176,28 @@ const StartupForm = () => {
   };
 
   const handleNext = () => {
-    setActiveStep((prevStep) => prevStep + 1);
+    let errors = {};
+    
+    switch (activeStep) {
+      case 0:
+        errors = validateBasicInfo(formData);
+        break;
+      case 1:
+        errors = validateMarketInfo(formData);
+        break;
+      case 2:
+        errors = validateFinancialInfo(formData);
+        break;
+      default:
+        break;
+    }
+
+    if (Object.keys(errors).length === 0) {
+      setActiveStep((prevStep) => prevStep + 1);
+      setFormErrors({});
+    } else {
+      setFormErrors(errors);
+    }
   };
 
   const handleBack = () => {
@@ -189,6 +211,11 @@ const StartupForm = () => {
 
       // Analyze the startup idea using OpenAI
       const analysisResult = await analyzeStartupIdea(formData);
+      
+      if (!analysisResult) {
+        throw new Error('Failed to generate analysis');
+      }
+
       setAnalysis(analysisResult);
 
       // Save to Firestore
@@ -201,10 +228,11 @@ const StartupForm = () => {
         });
       }
 
-      handleNext();
+      // Move to analysis step
+      setActiveStep(STEPS.length);
     } catch (err) {
-      setError('Failed to analyze startup idea. Please try again.');
-      console.error(err);
+      console.error('Analysis error:', err);
+      setError(err.message || 'Failed to analyze startup idea. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -215,35 +243,59 @@ const StartupForm = () => {
     setFormData(SAMPLE_DATA);
   };
 
+  // Validation helper functions
+  const validateBasicInfo = (data) => {
+    const errors = {};
+    if (!data.startupIdea?.trim()) errors.startupIdea = 'Startup idea is required';
+    if (!data.industry) errors.industry = 'Industry is required';
+    if (!data.problemSolution?.trim()) errors.problemSolution = 'Problem & solution is required';
+    if (data.problemSolution?.length < 50) errors.problemSolution = 'Problem & solution should be at least 50 characters';
+    return errors;
+  };
+
+  const validateMarketInfo = (data) => {
+    const errors = {};
+    if (!data.operationLocation?.trim()) errors.operationLocation = 'Operation location is required';
+    if (!data.targetUsers) errors.targetUsers = 'Target users is required';
+    if (!data.userAcquisition) errors.userAcquisition = 'User acquisition strategy is required';
+    return errors;
+  };
+
+  const validateFinancialInfo = (data) => {
+    const errors = {};
+    if (!data.needFunding || data.needFunding === 'not_sure') {
+      errors.needFunding = 'Please select if you need funding';
+    }
+    if (data.needFunding === 'yes' && (!data.initialInvestment || data.initialInvestment <= 0)) {
+      errors.initialInvestment = 'Initial investment must be greater than 0';
+    }
+    if (!data.businessModel) errors.businessModel = 'Business model is required';
+    if (!data.revenuePerUser || data.revenuePerUser <= 0) {
+      errors.revenuePerUser = 'Revenue per user must be greater than 0';
+    }
+    return errors;
+  };
+
   const renderBasicInfo = () => (
     <Card sx={{ mt: 2, p: 2 }}>
       <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6" gutterBottom>
-            1️⃣ Basic Startup Idea & Category Detection
-          </Typography>
-          <Tooltip title="Fill form with sample data for testing">
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={fillWithSampleData}
-              sx={{ ml: 2 }}
-            >
-              Test Data
-            </Button>
-          </Tooltip>
-        </Box>
+        <Typography variant="h6" gutterBottom>
+          1️⃣ Basic Startup Information
+        </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="What is your startup idea?"
+              label="Startup Idea"
               name="startupIdea"
               value={formData.startupIdea}
               onChange={handleChange}
               multiline
               rows={4}
               required
+              helperText="Describe your startup idea in detail"
+              error={!!formErrors.startupIdea}
+              helperText={formErrors.startupIdea}
             />
           </Grid>
           <Grid item xs={12}>
@@ -254,23 +306,28 @@ const StartupForm = () => {
                 value={formData.industry}
                 onChange={handleChange}
                 required
+                error={!!formErrors.industry}
               >
                 {INDUSTRIES.map(industry => (
                   <MenuItem key={industry} value={industry}>{industry}</MenuItem>
                 ))}
               </Select>
+              <FormHelperText>{formErrors.industry}</FormHelperText>
             </FormControl>
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="What problem does your startup solve?"
+              label="Problem & Solution"
               name="problemSolution"
               value={formData.problemSolution}
               onChange={handleChange}
               multiline
-              rows={3}
+              rows={4}
               required
+              helperText="Describe the problem you're solving and your solution"
+              error={!!formErrors.problemSolution}
+              helperText={formErrors.problemSolution}
             />
           </Grid>
         </Grid>
@@ -278,21 +335,24 @@ const StartupForm = () => {
     </Card>
   );
 
-  const renderMarketAnalysis = () => (
+  const renderMarketInfo = () => (
     <Card sx={{ mt: 2, p: 2 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          2️⃣ Market & Competition Analysis
+          2️⃣ Market & Competition
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Where will your startup operate?"
+              label="Operation Location"
               name="operationLocation"
               value={formData.operationLocation}
               onChange={handleChange}
               required
+              helperText="Where will your startup operate?"
+              error={!!formErrors.operationLocation}
+              helperText={formErrors.operationLocation}
             />
           </Grid>
           <Grid item xs={12}>
@@ -303,52 +363,15 @@ const StartupForm = () => {
                 value={formData.targetUsers}
                 onChange={handleChange}
                 required
+                error={!!formErrors.targetUsers}
               >
                 {TARGET_USERS.map(user => (
                   <MenuItem key={user} value={user}>{user}</MenuItem>
                 ))}
               </Select>
+              <FormHelperText>{formErrors.targetUsers}</FormHelperText>
             </FormControl>
           </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Are there existing competitors?</InputLabel>
-              <Select
-                name="hasCompetitors"
-                value={formData.hasCompetitors}
-                onChange={handleChange}
-                required
-              >
-                <MenuItem value="yes">Yes</MenuItem>
-                <MenuItem value="no">No</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          {formData.hasCompetitors === 'yes' ? (
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Who are your top competitors?"
-                name="competitors"
-                value={formData.competitors}
-                onChange={handleChange}
-                multiline
-                rows={2}
-              />
-            </Grid>
-          ) : (
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="How is your idea unique?"
-                name="uniqueIdea"
-                value={formData.uniqueIdea}
-                onChange={handleChange}
-                multiline
-                rows={2}
-              />
-            </Grid>
-          )}
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel>User Acquisition Strategy</InputLabel>
@@ -357,11 +380,13 @@ const StartupForm = () => {
                 value={formData.userAcquisition}
                 onChange={handleChange}
                 required
+                error={!!formErrors.userAcquisition}
               >
                 {USER_ACQUISITION.map(strategy => (
                   <MenuItem key={strategy} value={strategy}>{strategy}</MenuItem>
                 ))}
               </Select>
+              <FormHelperText>{formErrors.userAcquisition}</FormHelperText>
             </FormControl>
           </Grid>
         </Grid>
@@ -373,38 +398,46 @@ const StartupForm = () => {
     <Card sx={{ mt: 2, p: 2 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          3️⃣ Financial & Growth Potential
+          3️⃣ Financial & Growth
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Do you plan to raise funding?</InputLabel>
-              <Select
-                name="needFunding"
-                value={formData.needFunding}
-                onChange={handleChange}
-                required
-              >
-                <MenuItem value="yes">Yes</MenuItem>
-                <MenuItem value="no">No</MenuItem>
-                <MenuItem value="not_sure">Not Sure</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Estimated Initial Investment"
-              name="initialInvestment"
-              value={formData.initialInvestment}
-              onChange={handleChange}
-              type="number"
-              InputProps={{
-                startAdornment: <InputAdornment position="start">$</InputAdornment>,
-              }}
-              required
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.needFunding === 'yes'}
+                  onChange={(e) => handleChange({
+                    target: {
+                      name: 'needFunding',
+                      value: e.target.checked ? 'yes' : 'no'
+                    }
+                  })}
+                />
+              }
+              label="Do you need funding?"
             />
+            {formErrors.needFunding && (
+              <FormHelperText error={true}>{formErrors.needFunding}</FormHelperText>
+            )}
           </Grid>
+          {formData.needFunding === 'yes' && (
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Initial Investment Needed"
+                name="initialInvestment"
+                value={formData.initialInvestment}
+                onChange={handleChange}
+                type="number"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                }}
+                required
+                error={!!formErrors.initialInvestment}
+                helperText={formErrors.initialInvestment}
+              />
+            </Grid>
+          )}
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel>Business Model</InputLabel>
@@ -413,11 +446,13 @@ const StartupForm = () => {
                 value={formData.businessModel}
                 onChange={handleChange}
                 required
+                error={!!formErrors.businessModel}
               >
                 {BUSINESS_MODELS.map(model => (
                   <MenuItem key={model} value={model}>{model}</MenuItem>
                 ))}
               </Select>
+              <FormHelperText>{formErrors.businessModel}</FormHelperText>
             </FormControl>
           </Grid>
           <Grid item xs={12}>
@@ -432,22 +467,9 @@ const StartupForm = () => {
                 startAdornment: <InputAdornment position="start">$</InputAdornment>,
               }}
               required
+              error={!!formErrors.revenuePerUser}
+              helperText={formErrors.revenuePerUser}
             />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Estimated Break-even Time</InputLabel>
-              <Select
-                name="breakEvenTime"
-                value={formData.breakEvenTime}
-                onChange={handleChange}
-                required
-              >
-                {BREAKEVEN_TIMES.map(time => (
-                  <MenuItem key={time} value={time}>{time}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
           </Grid>
         </Grid>
       </CardContent>
@@ -504,7 +526,7 @@ const StartupForm = () => {
                   <MenuItem key={trend} value={trend}>{trend}</MenuItem>
                 ))}
               </Select>
-              <FormHelperText>Select all that apply</FormHelperText>
+              <FormHelperText>Select trends that support your startup</FormHelperText>
             </FormControl>
           </Grid>
         </Grid>
@@ -512,11 +534,11 @@ const StartupForm = () => {
     </Card>
   );
 
-  const renderAIOptions = () => (
+  const renderAiOptions = () => (
     <Card sx={{ mt: 2, p: 2 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          5️⃣ AI & Report Generation
+          5️⃣ AI & Reports
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12}>
@@ -532,7 +554,7 @@ const StartupForm = () => {
                   })}
                 />
               }
-              label="Generate AI-powered business strategies"
+              label="Generate AI-powered growth strategies"
             />
           </Grid>
           <Grid item xs={12}>
@@ -572,33 +594,37 @@ const StartupForm = () => {
     </Card>
   );
 
-  const steps = [
+  const STEPS = [
     {
       label: 'Basic Info',
       content: renderBasicInfo
     },
     {
-      label: 'Market Analysis',
-      content: renderMarketAnalysis
+      label: 'Market & Competition',
+      content: renderMarketInfo
     },
     {
-      label: 'Financial Info',
+      label: 'Financial & Growth',
       content: renderFinancialInfo
     },
     {
-      label: 'Growth Trends',
+      label: 'Growth & Market Trends',
       content: renderGrowthTrends
     },
     {
-      label: 'AI Options',
-      content: renderAIOptions
+      label: 'AI & Reports',
+      content: renderAiOptions
     }
   ];
 
   return (
-    <Box sx={{ width: '100%', mt: 3 }}>
-      <Stepper activeStep={activeStep}>
-        {steps.map((step, index) => (
+    <Box sx={{ width: '100%', p: 2 }}>
+      <Typography variant="h4" gutterBottom>
+        Startup Analysis Platform
+      </Typography>
+
+      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+        {STEPS.map((step, index) => (
           <Step key={step.label}>
             <StepLabel>{step.label}</StepLabel>
           </Step>
@@ -612,41 +638,57 @@ const StartupForm = () => {
           </Alert>
         )}
 
-        {activeStep === steps.length ? (
-          <AnalysisDashboard analysis={analysis} />
+        {activeStep === STEPS.length ? (
+          analysis ? (
+            <AnalysisDashboard analysis={analysis} />
+          ) : (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+              <CircularProgress />
+            </Box>
+          )
         ) : (
           <>
-            {steps[activeStep].content()}
+            {STEPS[activeStep].content()}
             
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
               <Button
-                disabled={activeStep === 0}
-                onClick={handleBack}
-                sx={{ mr: 1 }}
+                onClick={fillWithSampleData}
+                variant="outlined"
+                color="secondary"
               >
-                Back
+                Fill Test Data
               </Button>
               
-              {activeStep === steps.length - 1 ? (
+              <Box>
                 <Button
-                  variant="contained"
-                  onClick={handleSubmit}
-                  disabled={loading}
+                  disabled={activeStep === 0}
+                  onClick={handleBack}
+                  sx={{ mr: 1 }}
                 >
-                  {loading ? (
-                    <CircularProgress size={24} />
-                  ) : (
-                    'Analyze Startup'
-                  )}
+                  Back
                 </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  onClick={handleNext}
-                >
-                  Next
-                </Button>
-              )}
+                
+                {activeStep === STEPS.length - 1 ? (
+                  <Button
+                    variant="contained"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      'Analyze Startup'
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    onClick={handleNext}
+                  >
+                    Next
+                  </Button>
+                )}
+              </Box>
             </Box>
           </>
         )}
