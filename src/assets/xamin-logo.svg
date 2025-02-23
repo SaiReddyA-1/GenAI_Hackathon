@@ -2,7 +2,7 @@
 <svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,8)">
     <!-- Cube icon -->
-    <path d="M12 4L20 8V20L12 24L4 20V8L12 4Z" fill="#4A7BFF" stroke="#4A7BFF" stroke-width="2"/>
+    <path d="M12 4L20 8V20L12 24L4 20V8L12 4Z" fill="#0059b3" stroke="#0059b3" stroke-width="2"/>
     <path d="M12 4V16M20 8L12 12L4 8" stroke="white" stroke-width="2"/>
     <!-- Xamin text -->
     <text x="32" y="18" font-family="Arial" font-size="20" font-weight="bold" fill="#2D3958">Xamin</text>

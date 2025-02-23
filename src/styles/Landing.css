@@ -159,7 +159,7 @@ body {
 }
 
 .nav-link:hover {
-  color: #4A7BFF;
+  color: #0059b3;
 }
 
 .theme-toggle {
@@ -173,7 +173,7 @@ body {
 }
 
 .sign-in-btn {
-  background: #4A7BFF;
+  background: #0059b3;
   color: white;
   padding: 0.5rem 1.5rem;
   border-radius: 8px;
@@ -313,7 +313,7 @@ body {
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  background: #4A7BFF;
+  background: #0059b3;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -373,7 +373,7 @@ body {
 
 .feature-icon {
     font-size: 2.5rem;
-    color: #4A7BFF;
+    color: #0059b3;
     margin-bottom: 20px;
 }
 
@@ -538,7 +538,7 @@ body {
 .section-label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #4A7BFF;
+    color: #0059b3;
     margin-bottom: 16px;
     letter-spacing: 1px;
 }
@@ -584,7 +584,7 @@ body {
     content: '';
     width: 24px;
     height: 24px;
-    background: #4A7BFF;
+    background: #0059b3;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2L4 7v10l8 5 8-5V7l-8-5z'/%3E%3C/svg%3E") no-repeat center;
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2L4 7v10l8 5 8-5V7l-8-5z'/%3E%3C/svg%3E") no-repeat center;
 }
@@ -593,7 +593,7 @@ body {
     content: '';
     width: 24px;
     height: 24px;
-    background: #4A7BFF;
+    background: #0059b3;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z'/%3E%3C/svg%3E") no-repeat center;
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z'/%3E%3C/svg%3E") no-repeat center;
 }
@@ -630,7 +630,7 @@ body {
 }
 
 .check-icon {
-    color: #4A7BFF;
+    color: #0059b3;
     font-size: 1rem;
 }
 
@@ -641,7 +641,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-radius: 4px;
-    background-color: #4A7BFF;
+    background-color: #0059b3;
     color: white;
     border: none;
     cursor: pointer;
@@ -762,7 +762,7 @@ body {
 }
 
 .step-arrow {
-    color: #4A7BFF;
+    color: #0059b3;
     font-size: 1.5rem;
     opacity: 0.5;
 }
@@ -845,11 +845,11 @@ body {
 
 .service-tab.active {
     background: #f8f9ff;
-    border-color: #4A7BFF;
+    border-color: #0059b3;
 }
 
 .service-tab.active span {
-    color: #4A7BFF;
+    color: #0059b3;
 }
 
 .service-icon {
@@ -942,13 +942,13 @@ body {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, #1a365d 0%, #4A7BFF 100%);
+  background: linear-gradient(135deg, #1a365d 0%, #0059b3 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .section-label {
-  color: #4A7BFF;
+  color: #0059b3;
   font-weight: 600;
   letter-spacing: 1.5px;
   margin-bottom: 1rem;
@@ -986,7 +986,7 @@ body {
 }
 
 .contact-icon {
-  background: #4A7BFF;
+  background: #0059b3;
   color: white;
   padding: 0.75rem;
   border-radius: 0.75rem;
@@ -1015,7 +1015,7 @@ body {
 
 .social-icon {
   background: white;
-  color: #4A7BFF;
+  color: #0059b3;
   padding: 0.75rem;
   border-radius: 0.75rem;
   display: flex;
@@ -1027,7 +1027,7 @@ body {
 }
 
 .social-icon:hover {
-  background: #4A7BFF;
+  background: #0059b3;
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(74, 123, 255, 0.2);
@@ -1062,7 +1062,7 @@ body {
 }
 
 .form-input:focus {
-  border-color: #4A7BFF;
+  border-color: #0059b3;
   box-shadow: 0 0 0 3px rgba(74, 123, 255, 0.1);
 }
 
@@ -1072,7 +1072,7 @@ textarea.form-input {
 }
 
 .submit-btn {
-  background: #4A7BFF;
+  background: #0059b3;
   color: white;
   padding: 1rem 2rem;
   border: none;
@@ -1167,7 +1167,7 @@ textarea.form-input {
 }
 
 .social-links a {
-    color: #4A7BFF;
+    color: #0059b3;
     font-size: 1.25rem;
     transition: color 0.3s ease;
 }
@@ -1193,7 +1193,7 @@ textarea.form-input {
 }
 
 .footer-links a:hover {
-    color: #4A7BFF;
+    color: #0059b3;
 }
 
 @media (max-width: 1024px) {
