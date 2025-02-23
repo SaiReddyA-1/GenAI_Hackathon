@@ -523,6 +523,24 @@ export const getStartupInsightsWithGemini = async (formData) => {
   }
 };
 
+export const getLiveInsightWithGemini = async (prompt) => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    
+    // Modify the prompt to request markdown format and concise response
+    const enhancedPrompt = `${prompt}\n\nProvide a concise response in markdown format with bullet points and sub-points. Focus on 2-3 main categories with 2-3 specific actionable points under each. Keep the total response under 300 words.`;
+    
+    const result = await model.generateContent(enhancedPrompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    return text; // Return the markdown text directly
+  } catch (error) {
+    console.error('Error in getLiveInsightWithGemini:', error);
+    throw error;
+  }
+};
+
 function parseSection(text, sectionType) {
   if (!text) return {};
   

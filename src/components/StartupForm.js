@@ -29,9 +29,10 @@ import {
 import { db } from '../config/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { analyzeStartupIdea } from '../services/openai';
-import { getCompetitorsWithGemini, getStartupInsightsWithGemini } from '../services/gemini';
+import { getCompetitorsWithGemini, getStartupInsightsWithGemini, getLiveInsightWithGemini } from '../services/gemini';
 import useAuth from '../hooks/useAuth';
 import AnalysisDashboard from './AnalysisDashboard';
+import ReactMarkdown from 'react-markdown';
 
 const INDUSTRIES = [
   'AI',
@@ -121,6 +122,41 @@ const STEPS = [
   'Competitors'
 ];
 
+const IMPROVEMENT_QUESTIONS = [
+  {
+    id: 'market_trends',
+    question: 'What are the latest market trends that could impact my startup?',
+    prompt: (idea) => `Analyze the latest market trends for this startup idea: ${idea}. 
+    Format your response in markdown with 2-3 main categories and specific points under each.
+    Include market statistics and growth indicators where relevant.
+    Focus on current trends and near-future predictions that could directly impact this business.`
+  },
+  {
+    id: 'user_acquisition',
+    question: 'How can I improve my user acquisition strategy?',
+    prompt: (idea) => `Suggest innovative user acquisition strategies for this startup: ${idea}.
+    Format your response in markdown with 2-3 main categories (e.g., Digital Marketing, Partnerships, Growth Hacking).
+    Under each category, provide 2-3 specific, actionable tactics.
+    Include real-world examples or potential metrics where relevant.`
+  },
+  {
+    id: 'revenue_optimization',
+    question: 'What are potential ways to optimize revenue streams?',
+    prompt: (idea) => `Recommend ways to optimize and diversify revenue streams for this startup idea: ${idea}.
+    Format your response in markdown with 2-3 main revenue categories.
+    For each category, provide 2-3 specific monetization strategies or pricing models.
+    Include potential revenue projections or industry benchmarks where relevant.`
+  },
+  {
+    id: 'competitive_advantage',
+    question: 'How can I strengthen my competitive advantage?',
+    prompt: (idea) => `Analyze how to build and maintain a strong competitive advantage for this startup: ${idea}.
+    Format your response in markdown with 2-3 main strategic areas.
+    For each area, provide 2-3 specific differentiators or unique value propositions.
+    Include examples of successful implementations in similar industries.`
+  }
+];
+
 const StartupForm = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
@@ -131,6 +167,8 @@ const StartupForm = () => {
   const [analysis, setAnalysis] = useState(null);
   const [competitors, setCompetitors] = useState([]); 
   const [insights, setInsights] = useState(null);
+  const [liveInsights, setLiveInsights] = useState({});
+  const [loadingQuestion, setLoadingQuestion] = useState('');
   const { user } = useAuth();
 
   const renderBasicInfo = () => (
@@ -889,6 +927,107 @@ const StartupForm = () => {
     }
   };
 
+  const handleQuestionClick = async (questionId) => {
+    try {
+      setLoadingQuestion(questionId);
+      const question = IMPROVEMENT_QUESTIONS.find(q => q.id === questionId);
+      const prompt = question.prompt(formData.startupIdea);
+      
+      const response = await getLiveInsightWithGemini(prompt);
+      
+      setLiveInsights(prev => ({
+        ...prev,
+        [questionId]: response
+      }));
+    } catch (error) {
+      console.error('Error getting insights:', error);
+      setError('Failed to get insights. Please try again.');
+    } finally {
+      setLoadingQuestion('');
+    }
+  };
+
+  const renderLiveInsightsSection = () => {
+    if (!insights) return null;
+
+    return (
+      <Box sx={{ mt: 8 }}>
+        <Typography variant="h5" align="center" gutterBottom sx={{ color: 'white', mb: 3 }}>
+          Get Live Insights to Improve Your Startup
+        </Typography>
+        <Grid container spacing={3}>
+          {IMPROVEMENT_QUESTIONS.map((q) => (
+            <Grid item xs={12} key={q.id}>
+              <Card sx={{ 
+                backgroundColor: '#1e2430',
+                borderRadius: 2,
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ color: 'white' }}>
+                      {q.question}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      onClick={() => handleQuestionClick(q.id)}
+                      disabled={loadingQuestion === q.id}
+                      sx={{
+                        backgroundColor: '#6c5ce7',
+                        '&:hover': {
+                          backgroundColor: '#5f50e1'
+                        }
+                      }}
+                    >
+                      {loadingQuestion === q.id ? (
+                        <CircularProgress size={24} sx={{ color: 'white' }} />
+                      ) : (
+                        'Get Insights'
+                      )}
+                    </Button>
+                  </Box>
+                  
+                  {liveInsights[q.id] && (
+                    <Box sx={{ 
+                      mt: 2, 
+                      p: 2, 
+                      backgroundColor: '#242936', 
+                      borderRadius: 1,
+                      '& h1, & h2, & h3, & h4, & h5, & h6': {
+                        color: 'white',
+                        marginTop: 2,
+                        marginBottom: 1
+                      },
+                      '& p': {
+                        color: '#718096',
+                        marginBottom: 1
+                      },
+                      '& ul, & ol': {
+                        color: '#718096',
+                        paddingLeft: 3,
+                        marginBottom: 1
+                      },
+                      '& li': {
+                        marginBottom: 0.5
+                      },
+                      '& strong': {
+                        color: '#a0aec0'
+                      }
+                    }}>
+                      <ReactMarkdown>
+                        {liveInsights[q.id]}
+                      </ReactMarkdown>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
+  };
+
   const renderInsightsCard = (title, data, icon) => {
     if (!data) return null;
 
@@ -1440,6 +1579,7 @@ const StartupForm = () => {
             {error}
           </Alert>
         )}
+        {renderLiveInsightsSection()}
       </Paper>
     </Box>
   );
