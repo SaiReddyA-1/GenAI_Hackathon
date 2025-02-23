@@ -945,65 +945,6 @@ const StartupForm = () => {
     );
   };
 
-  const renderStartupInsights = () => {
-    if (!insights) return null;
-
-    return (
-      <div className="container mx-auto p-6">
-        {/* <h1 className="text-3xl font-bold text-center mb-8">Startup Insights Analysis</h1> */}
-        
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate('/market-charts')}
-            size="large"
-          >
-            View Market Analysis Charts
-          </Button>
-        </Box>
-
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Risks & Solutions card hidden
-          {renderInsightsCard("Risks & Solutions", {
-            "Key Risks": insights.risksAndSolutions?.key_risks || [],
-            "Solutions": insights.risksAndSolutions?.solutions || []
-          }, "🛡️")}
-          */}
-          {/* Market Analysis card hidden
-          {renderInsightsCard("Market Analysis", {
-            "Current Growth Rate": insights.marketAnalysis?.current_growth_rate,
-            "Market Trends": insights.marketAnalysis?.key_market_trends || [],
-            "Projected Growth": insights.marketAnalysis?.projected_growth
-          }, "📈")}
-          */}
-          
-          {/* Audience & Marketing card hidden
-          {renderInsightsCard("Audience & Marketing", {
-            "Target Audience": insights.audienceAndMarketing?.target_audience,
-            "Marketing Strategy": insights.audienceAndMarketing?.marketing_strategies || [],
-            "Investor Appeal": insights.audienceAndMarketing?.investor_appeal_points || []
-          }, "🎯")}
-          */}
-          
-          {/* Revenue Streams card hidden
-          {renderInsightsCard("Revenue Streams", {
-            "Primary Revenue": insights.revenueStreams?.primary_revenue_sources || [],
-            "Passive Income": insights.revenueStreams?.passive_income_opportunities || [],
-            "Capital Raising": insights.revenueStreams?.capital_raising_strategies || []
-          }, "💰")}
-          */}
-          
-          {/* Suggested Names card hidden
-          {renderInsightsCard("Suggested Names", 
-            insights.startupNames?.suggested_modern_names || [], 
-            "✨")}
-          */}
-        </div>
-      </div>
-    );
-  };
-
   const renderCompetitorsStep = () => {
     if (loadingStage) {
       return (
@@ -1027,7 +968,12 @@ const StartupForm = () => {
     return (
       <>
         <Box sx={{ py: 4 }}>
-          <Typography variant="h5" align="center" gutterBottom>
+          <Typography
+            variant="h5"
+            align="center"
+            gutterBottom
+            sx={{ color: 'white !important', mb: 3 }}
+          >
             Top Competitors Analysis
           </Typography>
           <Grid container spacing={3} sx={{ mt: 2 }}>
@@ -1179,6 +1125,65 @@ const StartupForm = () => {
     );
   };
 
+  const renderStartupInsights = () => {
+    if (!insights) return null;
+
+    return (
+      <div className="container mx-auto p-6">
+        {/* <h1 className="text-3xl font-bold text-center mb-8">Startup Insights Analysis</h1> */}
+        
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate('/market-charts')}
+            size="large"
+          >
+            View Market Analysis Charts
+          </Button>
+        </Box>
+
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Risks & Solutions card hidden
+          {renderInsightsCard("Risks & Solutions", {
+            "Key Risks": insights.risksAndSolutions?.key_risks || [],
+            "Solutions": insights.risksAndSolutions?.solutions || []
+          }, "🛡️")}
+          */}
+          {/* Market Analysis card hidden
+          {renderInsightsCard("Market Analysis", {
+            "Current Growth Rate": insights.marketAnalysis?.current_growth_rate,
+            "Market Trends": insights.marketAnalysis?.key_market_trends || [],
+            "Projected Growth": insights.marketAnalysis?.projected_growth
+          }, "📈")}
+          */}
+          
+          {/* Audience & Marketing card hidden
+          {renderInsightsCard("Audience & Marketing", {
+            "Target Audience": insights.audienceAndMarketing?.target_audience,
+            "Marketing Strategy": insights.audienceAndMarketing?.marketing_strategies || [],
+            "Investor Appeal": insights.audienceAndMarketing?.investor_appeal_points || []
+          }, "🎯")}
+          */}
+          
+          {/* Revenue Streams card hidden
+          {renderInsightsCard("Revenue Streams", {
+            "Primary Revenue": insights.revenueStreams?.primary_revenue_sources || [],
+            "Passive Income": insights.revenueStreams?.passive_income_opportunities || [],
+            "Capital Raising": insights.revenueStreams?.capital_raising_strategies || []
+          }, "💰")}
+          */}
+          
+          {/* Suggested Names card hidden
+          {renderInsightsCard("Suggested Names", 
+            insights.startupNames?.suggested_modern_names || [], 
+            "✨")}
+          */}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Box sx={{ 
       minHeight: '100vh', 
@@ -1289,23 +1294,24 @@ const StartupForm = () => {
             }}>
               <CardContent sx={{ p: 4 }}>
                 {/* Sample Data Button */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setFormData(SAMPLE_DATA)}
-                    sx={{
-                      color: '#6c5ce7',
-                      borderColor: '#6c5ce7',
-                      '&:hover': {
-                        borderColor: '#5f50e1',
-                        backgroundColor: 'rgba(108, 92, 231, 0.1)'
-                      }
-                    }}
-                  >
-                    Fill Sample Data
-                  </Button>
-                </Box>
-
+                {!insights && (
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => setFormData(SAMPLE_DATA)}
+                      sx={{
+                        color: '#6c5ce7',
+                        borderColor: '#6c5ce7',
+                        '&:hover': {
+                          borderColor: '#5f50e1',
+                          backgroundColor: 'rgba(108, 92, 231, 0.1)'
+                        }
+                      }}
+                    >
+                      Fill Sample Data
+                    </Button>
+                  </Box>
+                )}
                 {/* Form Content */}
                 <Box sx={{ mt: 2 }}>
                   {activeStep === 0 && (
@@ -1389,25 +1395,27 @@ const StartupForm = () => {
                   >
                     Back
                   </Button>
-                  <Button
-                    variant="contained"
-                    onClick={activeStep === STEPS.length - 1 ? handleSubmit : handleNext}
-                    disabled={loadingStage !== ''}
-                    sx={{
-                      backgroundColor: '#6c5ce7',
-                      '&:hover': {
-                        backgroundColor: '#5f50e1'
-                      }
-                    }}
-                  >
-                    {loadingStage !== '' ? (
-                      <CircularProgress size={24} sx={{ color: 'white' }} />
-                    ) : activeStep === STEPS.length - 1 ? (
-                      'Analyze'
-                    ) : (
-                      'Next'
-                    )}
-                  </Button>
+                  {!insights && (
+                    <Button
+                      variant="contained"
+                      onClick={activeStep === STEPS.length - 1 ? handleSubmit : handleNext}
+                      disabled={loadingStage !== ''}
+                      sx={{
+                        backgroundColor: '#6c5ce7',
+                        '&:hover': {
+                          backgroundColor: '#5f50e1'
+                        }
+                      }}
+                    >
+                      {loadingStage !== '' ? (
+                        <CircularProgress size={24} sx={{ color: 'white' }} />
+                      ) : activeStep === STEPS.length - 1 ? (
+                        'Analyze'
+                      ) : (
+                        'Next'
+                      )}
+                    </Button>
+                  )}
                 </Box>
               </CardContent>
             </Card>

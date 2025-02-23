@@ -124,7 +124,7 @@ const MarketChartsDashboard = () => {
         alignItems: 'center', 
         mb: 3 
       }}>
-        <h1 style={{ margin: 0 }}>Market Analysis Dashboard</h1>
+        <h1 style={{ margin: 0, textAlign: 'center', width: '100%' }}>Market Analysis Dashboard</h1>
         {/* <Button 
           variant="contained" 
           color="primary" 
