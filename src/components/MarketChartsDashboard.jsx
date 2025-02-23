@@ -125,13 +125,13 @@ const MarketChartsDashboard = () => {
         mb: 3 
       }}>
         <h1 style={{ margin: 0 }}>Market Analysis Dashboard</h1>
-        <Button 
+        {/* <Button 
           variant="contained" 
           color="primary" 
           onClick={() => navigate('/dashboard')}
         >
           Back to Dashboard
-        </Button>
+        </Button> */}
       </Box>
       
       <Box sx={{ display: 'grid', gap: 4 }}>
@@ -155,7 +155,7 @@ const MarketChartsDashboard = () => {
 
         {/* SWOT Analysis */}
         <Box sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
-          <h2>SWOT Analysis</h2>
+          {/* <h2>SWOT Analysis</h2> */}
           <SwotAnalysis analysisId={analysisId} />
         </Box>
 

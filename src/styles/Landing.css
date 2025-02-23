@@ -35,7 +35,6 @@ body {
 
 .navbar {
   position: fixed;
-  
   top: 0;
   left: 0;
   right: 0;
@@ -56,6 +55,87 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+}
+
+/* Mobile menu styles */
+.mobile-menu {
+  display: none;
+}
+
+.mobile-menu-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white !important;
+}
+
+.mobile-menu-btn svg {
+  width: 24px;
+  height: 24px;
+  color: white !important;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem;
+  }
+
+  .navbar-content {
+    position: relative;
+  }
+
+  .mobile-menu {
+    display: block;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1001;
+  }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(18, 21, 38, 0.95);
+    backdrop-filter: blur(10px);
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+    z-index: 1000;
+  }
+
+  .nav-links.active {
+    display: flex !important;
+  }
+
+  .nav-links:not(.active) {
+    display: none !important;
+  }
+
+  .nav-link {
+    color: white;
+    text-align: center;
+    width: 100%;
+    padding: 0.5rem;
+  }
+
+  .sign-in-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .sign-out-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .logo {
@@ -137,9 +217,43 @@ body {
 .hero {
   position: relative;
   min-height: 100vh;
-  background: radial-gradient(circle at center, #1a1f35 0%, #0d1117 100%);
-  overflow: hidden;
-  padding-top: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background-color: var(--bg-100);
+  color: var(--text-100);
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+  z-index: 1;
+}
+
+.hero-text h1 {
+  font-size: 3.5rem;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 20px;
+    min-height: auto;
+  }
+
+  .hero-text h1 {
+    font-size: 2.5rem;
+    margin-top: 80px; /* Add margin to create space below navbar */
+  }
+
+  .hero-text p {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
 }
 
 .hero::before {
@@ -156,28 +270,9 @@ body {
   pointer-events: none;
 }
 
-.hero-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 4rem 2rem;
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
 .hero-text {
   max-width: 800px;
   margin-bottom: 3rem;
-}
-
-.hero-text h1 {
-  font-size: 3.5rem;
-  color: white;
-  margin-bottom: 1.5rem;
-  line-height: 1.2;
 }
 
 .hero-text p {

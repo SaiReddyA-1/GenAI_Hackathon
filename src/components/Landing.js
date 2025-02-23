@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaMoon, FaSun, FaArrowRight, FaCheck, FaRocket, FaChartLine, FaRobot, FaSignOutAlt, FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa';
+import { FaMoon, FaSun, FaArrowRight, FaCheck, FaRocket, FaChartLine, FaRobot, FaSignOutAlt, FaLinkedin, FaGithub, FaEnvelope, FaBars, FaTimes } from 'react-icons/fa';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { db } from '../config/firebase';
@@ -30,6 +30,7 @@ const Landing = () => {
     message: '',
     isError: false
   });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -119,30 +120,53 @@ const Landing = () => {
     }));
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleNavLinkClick = (ref) => (e) => {
+    scrollToSection(ref)(e);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="landing">
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
         <div className="navbar-content">
-          <Link to="/" className="logo">
+          <Link to="/" className="logo" onClick={() => setIsMobileMenuOpen(false)}>
             StartupLens
           </Link>
-          <div className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <a href="#about" onClick={scrollToSection(aboutRef)} className="nav-link">About</a>
-            <a href="#how-it-works" onClick={scrollToSection(howItWorksRef)} className="nav-link">How It Works</a>
-            <a href="#services" onClick={scrollToSection(servicesRef)} className="nav-link">Services</a>
-            <a href="#testimonials" onClick={scrollToSection(testimonialsRef)} className="nav-link">Testimonials</a>
-            <a href="#contact" onClick={scrollToSection(contactRef)} className="nav-link">Contact</a>
+          
+          <div className="mobile-menu">
+            <button 
+              className="mobile-menu-btn"
+              onClick={toggleMobileMenu}
+            >
+              {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+            </button>
+          </div>
+
+          <div className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`}>
+            <Link to="/" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+            <a href="#about" onClick={handleNavLinkClick(aboutRef)} className="nav-link">About</a>
+            <a href="#how-it-works" onClick={handleNavLinkClick(howItWorksRef)} className="nav-link">How It Works</a>
+            <a href="#services" onClick={handleNavLinkClick(servicesRef)} className="nav-link">Services</a>
+            <a href="#testimonials" onClick={handleNavLinkClick(testimonialsRef)} className="nav-link">Testimonials</a>
+            <a href="#contact" onClick={handleNavLinkClick(contactRef)} className="nav-link">Contact</a>
             {user ? (
-              <>
-                <button className="sign-out-btn" onClick={handleSignOut}>
-                  <FaSignOutAlt /> Sign Out
-                </button>
-              </>
+              <button 
+                className="sign-out-btn" 
+                onClick={(e) => {
+                  handleSignOut();
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <FaSignOutAlt /> Sign Out
+              </button>
             ) : (
               <>
-                <Link to="/login" className="nav-link">Sign In</Link>
-                <Link to="/login" className="sign-in-btn">Sign Up</Link>
+                <Link to="/login" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+                <Link to="/login" className="sign-in-btn" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
               </>
             )}
           </div>

@@ -32,7 +32,6 @@ import { analyzeStartupIdea } from '../services/openai';
 import { getCompetitorsWithGemini, getStartupInsightsWithGemini } from '../services/gemini';
 import useAuth from '../hooks/useAuth';
 import AnalysisDashboard from './AnalysisDashboard';
-import NavbarWrapper from './NavbarWrapper';
 
 const INDUSTRIES = [
   'AI',
@@ -777,8 +776,7 @@ const StartupForm = () => {
 
   return (
     <>
-      <NavbarWrapper />
-      <div className="container mx-auto p-6" style={{ marginTop: '16px' }}>
+      <div className="container mx-auto p-6" style={{ marginTop: '16px', marginBottom: '16px' }}>
         <h1 className="text-3xl font-bold text-center mb-8">Startup Idea Analyzer</h1>
         
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
