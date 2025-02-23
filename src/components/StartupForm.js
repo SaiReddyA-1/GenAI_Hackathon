@@ -1213,16 +1213,32 @@ const StartupForm = () => {
           <>
             <Stepper 
               activeStep={activeStep} 
+              alternativeLabel
               sx={{ 
                 mb: 5,
                 '& .MuiStepLabel-label': {
-                  color: 'white',
+                  color: 'white !important',
+                  '&.Mui-completed': {
+                    color: 'white !important'
+                  },
+                  '&.Mui-active': {
+                    color: 'white !important'
+                  },
+                  '&.Mui-disabled': {
+                    color: 'rgba(255, 255, 255, 0.7) !important'
+                  }
                 },
                 '& .MuiStepIcon-root': {
-                  color: '#6c5ce7',
-                },
-                '& .MuiStepIcon-root.Mui-completed': {
-                  color: '#6c5ce7',
+                  color: 'white',
+                  '&.Mui-completed': {
+                    color: '#6c5ce7'
+                  },
+                  '&.Mui-active': {
+                    color: '#6c5ce7'
+                  },
+                  '& text': {
+                    fill: '#000000 !important'
+                  }
                 },
                 '& .MuiStepConnector-line': {
                   borderColor: '#2d3436',
@@ -1231,7 +1247,36 @@ const StartupForm = () => {
             >
               {STEPS.map((label) => (
                 <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
+                  <StepLabel 
+                    sx={{
+                      '& .MuiStepLabel-label': {
+                        color: 'white !important',
+                        '&.Mui-completed': {
+                          color: 'white !important'
+                        },
+                        '&.Mui-active': {
+                          color: 'white !important'
+                        },
+                        '&.Mui-disabled': {
+                          color: 'rgba(255, 255, 255, 0.7) !important'
+                        }
+                      },
+                      '& .MuiStepIcon-root': {
+                        color: 'white',
+                        '&.Mui-completed': {
+                          color: '#6c5ce7'
+                        },
+                        '&.Mui-active': {
+                          color: '#6c5ce7'
+                        },
+                        '& text': {
+                          fill: '#000000 !important'
+                        }
+                      }
+                    }}
+                  >
+                    {label}
+                  </StepLabel>
                 </Step>
               ))}
             </Stepper>
