@@ -138,41 +138,127 @@ const StartupForm = () => {
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="Startup Idea"
+          label="What's your innovative idea?"
           multiline
           rows={4}
           value={formData.startupIdea || ''}
           onChange={(e) => handleFormChange('startupIdea', e.target.value)}
           error={!!errors.startupIdea}
           helperText={errors.startupIdea}
+          variant="outlined"
+          sx={{
+            '& .MuiInputLabel-root': {
+              color: '#718096',
+              '&.Mui-focused': {
+                color: '#6c5ce7'
+              }
+            },
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: '#1e2430',
+              '& input, & textarea': {
+                color: '#4a5568',
+                '&::placeholder': {
+                  color: '#4a5568',
+                  opacity: 0.7
+                }
+              },
+              '& fieldset': {
+                borderColor: 'transparent'
+              },
+              '&:hover fieldset': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#6c5ce7'
+              }
+            },
+            '& .MuiFormHelperText-root': {
+              color: '#718096'
+            }
+          }}
         />
-      </Grid>
-      <Grid item xs={12}>
-        <FormControl fullWidth error={!!errors.industry}>
-          <InputLabel>Industry</InputLabel>
-          <Select
-            value={formData.industry || ''}
-            onChange={(e) => handleFormChange('industry', e.target.value)}
-            label="Industry"
-          >
-            {INDUSTRIES.map((industry) => (
-              <MenuItem key={industry} value={industry}>{industry}</MenuItem>
-            ))}
-          </Select>
-          {errors.industry && <FormHelperText>{errors.industry}</FormHelperText>}
-        </FormControl>
       </Grid>
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="Problem & Solution"
+          label="What problem does it solve?"
           multiline
           rows={4}
           value={formData.problemSolution || ''}
           onChange={(e) => handleFormChange('problemSolution', e.target.value)}
           error={!!errors.problemSolution}
           helperText={errors.problemSolution}
+          variant="outlined"
+          sx={{
+            '& .MuiInputLabel-root': {
+              color: '#718096',
+              '&.Mui-focused': {
+                color: '#6c5ce7'
+              }
+            },
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: '#1e2430',
+              '& input, & textarea': {
+                color: '#4a5568',
+                '&::placeholder': {
+                  color: '#4a5568',
+                  opacity: 0.7
+                }
+              },
+              '& fieldset': {
+                borderColor: 'transparent'
+              },
+              '&:hover fieldset': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#6c5ce7'
+              }
+            },
+            '& .MuiFormHelperText-root': {
+              color: '#718096'
+            }
+          }}
         />
+      </Grid>
+      <Grid item xs={12}>
+        <FormControl fullWidth>
+          <InputLabel sx={{ 
+            color: '#718096',
+            '&.Mui-focused': {
+              color: '#6c5ce7'
+            }
+          }}>Industry</InputLabel>
+          <Select
+            value={formData.industry || ''}
+            onChange={(e) => handleFormChange('industry', e.target.value)}
+            label="Industry"
+            sx={{
+              backgroundColor: '#1e2430',
+              color: '#4a5568',
+              '& .MuiSelect-select': {
+                color: '#4a5568'
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'transparent'
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '& .MuiSelect-icon': {
+                color: '#4a5568'
+              }
+            }}
+          >
+            {INDUSTRIES.map((industry) => (
+              <MenuItem key={industry} value={industry}>{industry}</MenuItem>
+            ))}
+          </Select>
+          {errors.industry && <FormHelperText error>{errors.industry}</FormHelperText>}
+        </FormControl>
       </Grid>
     </Grid>
   );
@@ -185,15 +271,70 @@ const StartupForm = () => {
           label="Operation Location"
           value={formData.operationLocation || ''}
           onChange={(e) => handleFormChange('operationLocation', e.target.value)}
+          variant="outlined"
+          sx={{
+            '& .MuiInputLabel-root': {
+              color: '#718096',
+              '&.Mui-focused': {
+                color: '#6c5ce7'
+              }
+            },
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: '#1e2430',
+              '& input, & textarea': {
+                color: '#4a5568',
+                '&::placeholder': {
+                  color: '#4a5568',
+                  opacity: 0.7
+                }
+              },
+              '& fieldset': {
+                borderColor: 'transparent'
+              },
+              '&:hover fieldset': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#6c5ce7'
+              }
+            },
+            '& .MuiFormHelperText-root': {
+              color: '#718096'
+            }
+          }}
         />
       </Grid>
       <Grid item xs={12}>
         <FormControl fullWidth>
-          <InputLabel>Target Users</InputLabel>
+          <InputLabel sx={{ 
+            color: '#718096',
+            '&.Mui-focused': {
+              color: '#6c5ce7'
+            }
+          }}>Target Users</InputLabel>
           <Select
             value={formData.targetUsers || ''}
             onChange={(e) => handleFormChange('targetUsers', e.target.value)}
             label="Target Users"
+            sx={{
+              backgroundColor: '#1e2430',
+              color: '#4a5568',
+              '& .MuiSelect-select': {
+                color: '#4a5568'
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'transparent'
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '& .MuiSelect-icon': {
+                color: '#4a5568'
+              }
+            }}
           >
             {TARGET_USERS.map((user) => (
               <MenuItem key={user} value={user}>{user}</MenuItem>
@@ -207,9 +348,19 @@ const StartupForm = () => {
             <Switch
               checked={formData.hasCompetitors === 'yes'}
               onChange={(e) => handleFormChange('hasCompetitors', e.target.checked ? 'yes' : 'no')}
+              sx={{
+                '& .MuiSwitch-switchBase': {
+                  color: '#718096'
+                }
+              }}
             />
           }
           label="Do you have competitors?"
+          sx={{
+            '& .MuiTypography-root': {
+              color: '#718096'
+            }
+          }}
         />
       </Grid>
       {formData.hasCompetitors === 'yes' && (
@@ -222,16 +373,71 @@ const StartupForm = () => {
             value={formData.competitors || ''}
             onChange={(e) => handleFormChange('competitors', e.target.value)}
             helperText="Separate competitors with commas"
+            variant="outlined"
+            sx={{
+              '& .MuiInputLabel-root': {
+                color: '#718096',
+                '&.Mui-focused': {
+                  color: '#6c5ce7'
+                }
+              },
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: '#1e2430',
+                '& input, & textarea': {
+                  color: '#4a5568',
+                  '&::placeholder': {
+                    color: '#4a5568',
+                    opacity: 0.7
+                  }
+                },
+                '& fieldset': {
+                  borderColor: 'transparent'
+                },
+                '&:hover fieldset': {
+                  borderColor: '#6c5ce7'
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#6c5ce7'
+                }
+              },
+              '& .MuiFormHelperText-root': {
+                color: '#718096'
+              }
+            }}
           />
         </Grid>
       )}
       <Grid item xs={12}>
         <FormControl fullWidth>
-          <InputLabel>User Acquisition Strategy</InputLabel>
+          <InputLabel sx={{ 
+            color: '#718096',
+            '&.Mui-focused': {
+              color: '#6c5ce7'
+            }
+          }}>User Acquisition Strategy</InputLabel>
           <Select
             value={formData.userAcquisition || ''}
             onChange={(e) => handleFormChange('userAcquisition', e.target.value)}
             label="User Acquisition Strategy"
+            sx={{
+              backgroundColor: '#1e2430',
+              color: '#4a5568',
+              '& .MuiSelect-select': {
+                color: '#4a5568'
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'transparent'
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '& .MuiSelect-icon': {
+                color: '#4a5568'
+              }
+            }}
           >
             {USER_ACQUISITION.map((strategy) => (
               <MenuItem key={strategy} value={strategy}>{strategy}</MenuItem>
@@ -250,9 +456,19 @@ const StartupForm = () => {
             <Switch
               checked={formData.needFunding === 'yes'}
               onChange={(e) => handleFormChange('needFunding', e.target.checked ? 'yes' : 'no')}
+              sx={{
+                '& .MuiSwitch-switchBase': {
+                  color: '#718096'
+                }
+              }}
             />
           }
           label="Do you need funding?"
+          sx={{
+            '& .MuiTypography-root': {
+              color: '#718096'
+            }
+          }}
         />
       </Grid>
       {formData.needFunding === 'yes' && (
@@ -266,16 +482,71 @@ const StartupForm = () => {
             InputProps={{
               startAdornment: <InputAdornment position="start">$</InputAdornment>,
             }}
+            variant="outlined"
+            sx={{
+              '& .MuiInputLabel-root': {
+                color: '#718096',
+                '&.Mui-focused': {
+                  color: '#6c5ce7'
+                }
+              },
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: '#1e2430',
+                '& input, & textarea': {
+                  color: '#4a5568',
+                  '&::placeholder': {
+                    color: '#4a5568',
+                    opacity: 0.7
+                  }
+                },
+                '& fieldset': {
+                  borderColor: 'transparent'
+                },
+                '&:hover fieldset': {
+                  borderColor: '#6c5ce7'
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#6c5ce7'
+                }
+              },
+              '& .MuiFormHelperText-root': {
+                color: '#718096'
+              }
+            }}
           />
         </Grid>
       )}
       <Grid item xs={12}>
         <FormControl fullWidth>
-          <InputLabel>Business Model</InputLabel>
+          <InputLabel sx={{ 
+            color: '#718096',
+            '&.Mui-focused': {
+              color: '#6c5ce7'
+            }
+          }}>Business Model</InputLabel>
           <Select
             value={formData.businessModel || ''}
             onChange={(e) => handleFormChange('businessModel', e.target.value)}
             label="Business Model"
+            sx={{
+              backgroundColor: '#1e2430',
+              color: '#4a5568',
+              '& .MuiSelect-select': {
+                color: '#4a5568'
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'transparent'
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '& .MuiSelect-icon': {
+                color: '#4a5568'
+              }
+            }}
           >
             {BUSINESS_MODELS.map((model) => (
               <MenuItem key={model} value={model}>{model}</MenuItem>
@@ -293,15 +564,70 @@ const StartupForm = () => {
           InputProps={{
             startAdornment: <InputAdornment position="start">$</InputAdornment>,
           }}
+          variant="outlined"
+          sx={{
+            '& .MuiInputLabel-root': {
+              color: '#718096',
+              '&.Mui-focused': {
+                color: '#6c5ce7'
+              }
+            },
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: '#1e2430',
+              '& input, & textarea': {
+                color: '#4a5568',
+                '&::placeholder': {
+                  color: '#4a5568',
+                  opacity: 0.7
+                }
+              },
+              '& fieldset': {
+                borderColor: 'transparent'
+              },
+              '&:hover fieldset': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#6c5ce7'
+              }
+            },
+            '& .MuiFormHelperText-root': {
+              color: '#718096'
+            }
+          }}
         />
       </Grid>
       <Grid item xs={12}>
         <FormControl fullWidth>
-          <InputLabel>Break-even Time</InputLabel>
+          <InputLabel sx={{ 
+            color: '#718096',
+            '&.Mui-focused': {
+              color: '#6c5ce7'
+            }
+          }}>Break-even Time</InputLabel>
           <Select
             value={formData.breakEvenTime || ''}
             onChange={(e) => handleFormChange('breakEvenTime', e.target.value)}
             label="Break-even Time"
+            sx={{
+              backgroundColor: '#1e2430',
+              color: '#4a5568',
+              '& .MuiSelect-select': {
+                color: '#4a5568'
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'transparent'
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '& .MuiSelect-icon': {
+                color: '#4a5568'
+              }
+            }}
           >
             {BREAKEVEN_TIMES.map((time) => (
               <MenuItem key={time} value={time}>{time}</MenuItem>
@@ -312,15 +638,39 @@ const StartupForm = () => {
     </Grid>
   );
 
-  const renderAIReports = () => (
+  const renderAiReports = () => (
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <FormControl fullWidth>
-          <InputLabel>Market Size</InputLabel>
+          <InputLabel sx={{ 
+            color: '#718096',
+            '&.Mui-focused': {
+              color: '#6c5ce7'
+            }
+          }}>Market Size</InputLabel>
           <Select
             value={formData.marketSize || ''}
             onChange={(e) => handleFormChange('marketSize', e.target.value)}
             label="Market Size"
+            sx={{
+              backgroundColor: '#1e2430',
+              color: '#4a5568',
+              '& .MuiSelect-select': {
+                color: '#4a5568'
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'transparent'
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '& .MuiSelect-icon': {
+                color: '#4a5568'
+              }
+            }}
           >
             {MARKET_SIZES.map((size) => (
               <MenuItem key={size} value={size}>{size}</MenuItem>
@@ -338,16 +688,71 @@ const StartupForm = () => {
           InputProps={{
             endAdornment: <InputAdornment position="end">%</InputAdornment>,
           }}
+          variant="outlined"
+          sx={{
+            '& .MuiInputLabel-root': {
+              color: '#718096',
+              '&.Mui-focused': {
+                color: '#6c5ce7'
+              }
+            },
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: '#1e2430',
+              '& input, & textarea': {
+                color: '#4a5568',
+                '&::placeholder': {
+                  color: '#4a5568',
+                  opacity: 0.7
+                }
+              },
+              '& fieldset': {
+                borderColor: 'transparent'
+              },
+              '&:hover fieldset': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#6c5ce7'
+              }
+            },
+            '& .MuiFormHelperText-root': {
+              color: '#718096'
+            }
+          }}
         />
       </Grid>
       <Grid item xs={12}>
         <FormControl fullWidth>
-          <InputLabel>Supporting Market Trends</InputLabel>
+          <InputLabel sx={{ 
+            color: '#718096',
+            '&.Mui-focused': {
+              color: '#6c5ce7'
+            }
+          }}>Supporting Market Trends</InputLabel>
           <Select
             multiple
             value={formData.supportingTrends || []}
             onChange={(e) => handleFormChange('supportingTrends', e.target.value)}
             label="Supporting Market Trends"
+            sx={{
+              backgroundColor: '#1e2430',
+              color: '#4a5568',
+              '& .MuiSelect-select': {
+                color: '#4a5568'
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'transparent'
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6c5ce7'
+              },
+              '& .MuiSelect-icon': {
+                color: '#4a5568'
+              }
+            }}
           >
             {MARKET_TRENDS.map((trend) => (
               <MenuItem key={trend} value={trend}>{trend}</MenuItem>
@@ -367,7 +772,7 @@ const StartupForm = () => {
       case 2:
         return renderFinancialGrowth();
       case 3:
-        return renderAIReports();
+        return renderAiReports();
       default:
         return null;
     }
@@ -775,58 +1180,215 @@ const StartupForm = () => {
   };
 
   return (
-    <>
-      <div className="container mx-auto p-6" style={{ marginTop: '16px', marginBottom: '16px' }}>
-        <h1 className="text-3xl font-bold text-center mb-8">Startup Idea Analyzer</h1>
-        
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {STEPS.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      minWidth: '100vw',
+      backgroundColor: '#1a1f2e',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflowY: 'auto',
+      p: 4,
+      color: 'white'
+    }}>
+      <Paper 
+        elevation={0}
+        sx={{
+          maxWidth: 1200,
+          margin: '0 auto',
+          backgroundColor: 'transparent',
+          p: 3
+        }}
+      >
+        <Typography variant="h4" align="center" gutterBottom sx={{ color: 'white', mb: 4 }}>
+          Startup Idea Analyzer
+        </Typography>
+        <Typography variant="subtitle1" align="center" sx={{ color: '#718096', mb: 5 }}>
+          Transform your idea into a viable business concept
+        </Typography>
 
-        {activeStep === STEPS.length ? (
-          renderAnalysisStep()
-        ) : activeStep === STEPS.length - 1 ? (
-          renderCompetitorsStep()
-        ) : (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleNext();
-          }}>
-            {getStepContent(activeStep)}
-            
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-              <Button
-                disabled={activeStep === 0}
-                onClick={handleBack}
-              >
-                Back
-              </Button>
-              <Box>
-                {activeStep === 0 && (
+        {!analysis ? (
+          <>
+            <Stepper 
+              activeStep={activeStep} 
+              sx={{ 
+                mb: 5,
+                '& .MuiStepLabel-label': {
+                  color: 'white',
+                },
+                '& .MuiStepIcon-root': {
+                  color: '#6c5ce7',
+                },
+                '& .MuiStepIcon-root.Mui-completed': {
+                  color: '#6c5ce7',
+                },
+                '& .MuiStepConnector-line': {
+                  borderColor: '#2d3436',
+                }
+              }}
+            >
+              {STEPS.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+
+            <Card sx={{ 
+              backgroundColor: '#1e2430',
+              borderRadius: 2,
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              mb: 3
+            }}>
+              <CardContent sx={{ p: 4 }}>
+                {/* Sample Data Button */}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
                   <Button
+                    variant="outlined"
                     onClick={() => setFormData(SAMPLE_DATA)}
-                    sx={{ mr: 1 }}
+                    sx={{
+                      color: '#6c5ce7',
+                      borderColor: '#6c5ce7',
+                      '&:hover': {
+                        borderColor: '#5f50e1',
+                        backgroundColor: 'rgba(108, 92, 231, 0.1)'
+                      }
+                    }}
                   >
                     Fill Sample Data
                   </Button>
-                )}
-                <Button
-                  variant="contained"
-                  type="submit"
-                  disabled={!!loadingStage}
-                >
-                  {activeStep === STEPS.length - 2 ? 'Analyze' : 'Next'}
-                </Button>
-              </Box>
-            </Box>
-          </form>
+                </Box>
+
+                {/* Form Content */}
+                <Box sx={{ mt: 2 }}>
+                  {activeStep === 0 && (
+                    <Box sx={{ 
+                      '& .MuiGrid-root': { 
+                        '& .MuiFormControl-root': {
+                          backgroundColor: '#242936',
+                          borderRadius: 1,
+                          p: 1
+                        }
+                      }
+                    }}>
+                      {renderBasicInfo()}
+                    </Box>
+                  )}
+                  {activeStep === 1 && (
+                    <Box sx={{ 
+                      '& .MuiGrid-root': { 
+                        '& .MuiFormControl-root': {
+                          backgroundColor: '#242936',
+                          borderRadius: 1,
+                          p: 1
+                        }
+                      }
+                    }}>
+                      {renderMarketCompetition()}
+                    </Box>
+                  )}
+                  {activeStep === 2 && (
+                    <Box sx={{ 
+                      '& .MuiGrid-root': { 
+                        '& .MuiFormControl-root': {
+                          backgroundColor: '#242936',
+                          borderRadius: 1,
+                          p: 1
+                        }
+                      }
+                    }}>
+                      {renderFinancialGrowth()}
+                    </Box>
+                  )}
+                  {activeStep === 3 && (
+                    <Box sx={{ 
+                      '& .MuiGrid-root': { 
+                        '& .MuiFormControl-root': {
+                          backgroundColor: '#242936',
+                          borderRadius: 1,
+                          p: 1
+                        }
+                      }
+                    }}>
+                      {renderAiReports()}
+                    </Box>
+                  )}
+                  {activeStep === 4 && (
+                    <Box sx={{ 
+                      '& .MuiGrid-root': { 
+                        '& .MuiFormControl-root': {
+                          backgroundColor: '#242936',
+                          borderRadius: 1,
+                          p: 1
+                        }
+                      }
+                    }}>
+                      {renderCompetitorsStep()}
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Navigation Buttons */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                  <Button
+                    onClick={handleBack}
+                    disabled={activeStep === 0 || loadingStage !== ''}
+                    sx={{
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                      }
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={activeStep === STEPS.length - 1 ? handleSubmit : handleNext}
+                    disabled={loadingStage !== ''}
+                    sx={{
+                      backgroundColor: '#6c5ce7',
+                      '&:hover': {
+                        backgroundColor: '#5f50e1'
+                      }
+                    }}
+                  >
+                    {loadingStage !== '' ? (
+                      <CircularProgress size={24} sx={{ color: 'white' }} />
+                    ) : activeStep === STEPS.length - 1 ? (
+                      'Analyze'
+                    ) : (
+                      'Next'
+                    )}
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <AnalysisDashboard 
+            analysis={analysis}
+            competitors={competitors}
+            insights={insights}
+            onReset={() => {
+              setAnalysis(null);
+              setCompetitors([]);
+              setInsights(null);
+              setActiveStep(0);
+              setFormData({});
+            }}
+          />
         )}
-      </div>
-    </>
+
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+      </Paper>
+    </Box>
   );
 };
 
