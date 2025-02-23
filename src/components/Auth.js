@@ -63,39 +63,35 @@ const Auth = () => {
 
   return (
     <Grid container sx={{ height: '100vh' }}>
-      {/* Left side - Image and Text */}
+      {/* Left side - Video */}
       <Grid item xs={12} md={6} 
         sx={{
-          backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("https://source.unsplash.com/random?workspace")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          position: 'relative',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
           color: 'white',
           textAlign: 'center',
-          p: 4
+          p: 4,
+          overflow: 'hidden'
         }}>
-        <Typography variant="h3" component="h1" sx={{ mb: 2, fontWeight: 'bold' }}>
-          Better Login
-        </Typography>
-        <Typography variant="body1" sx={{ mb: 4, maxWidth: '80%' }}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua.
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={handlePlayVideo}
+        <Box
+          component="video"
+          autoPlay
+          muted
+          loop
           sx={{
-            bgcolor: 'primary.main',
-            color: 'white',
-            borderRadius: '25px',
-            px: 4
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: 0
           }}
-        >
-          Play Video Intro
-        </Button>
+          src="https://res.cloudinary.com/dyv6tyill/video/upload/v1740280261/istockphoto-2158124646-640_adpp_is_dd4fya.mp4"
+        />
       </Grid>
 
       {/* Right side - Login Form */}
