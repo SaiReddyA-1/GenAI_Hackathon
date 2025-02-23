@@ -327,7 +327,11 @@ const Landing = () => {
           <div className="testimonials-grid">
             <div className="testimonial-card">
               <div className="testimonial-header">
-                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="David Chen" className="client-image" />
+                <img 
+                  src="https://lh3.googleusercontent.com/a/ACg8ocIotm0TQM_loC-vbRZTR5QjHwAqsSXAGzWtOYAMkzBcklLDNeb8Mg=s1008-c-no" 
+                  alt="Suresh Timma" 
+                  className="client-image" 
+                />
                 <StarRating rating={5} />
               </div>
               <p className="testimonial-text">
@@ -341,21 +345,29 @@ const Landing = () => {
 
             <div className="testimonial-card">
               <div className="testimonial-header">
-                <img src="https://randomuser.me/api/portraits/men/33.jpg" alt="Sarah Williams" className="client-image" />
+                <img 
+                  src="https://res.cloudinary.com/dudjdf428/image/upload/v1730537985/WhatsApp_Image_2024-11-02_at_1.23.02_PM_nrk44s.jpg" 
+                  alt="Hrushikesh Gangusetty" 
+                  className="client-image" 
+                />
                 <StarRating rating={5} />
               </div>
               <p className="testimonial-text">
                 The interactive charts and competitor analysis gave me a clear picture of my market position. I now have a solid strategy backed by data.
               </p>
               <div className="client-info">
-                <h4>Hrushikesh Gangusetty </h4>
+                <h4>Hrushikesh Gangusetty</h4>
                 <span>Outreach and Ideation</span>
               </div>
             </div>
 
             <div className="testimonial-card">
               <div className="testimonial-header">
-                <img src="https://randomuser.me/api/portraits/women/28.jpg" alt="Emily Rodriguez" className="client-image" />
+                <img 
+                  src="https://res.cloudinary.com/dbcmqdoxa/image/upload/v1740277176/1732688467296_b8flmh.jpg" 
+                  alt="Prasanth Velaga" 
+                  className="client-image" 
+                />
                 <StarRating rating={5} />
               </div>
               <p className="testimonial-text">
@@ -363,7 +375,7 @@ const Landing = () => {
               </p>
               <div className="client-info">
                 <h4>Prasanth Velaga</h4>
-                <span>Design and Ideation and research</span>
+                <span>Design and Ideation and Research</span>
               </div>
             </div>
           </div>

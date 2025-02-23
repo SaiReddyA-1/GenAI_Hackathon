@@ -80,7 +80,6 @@ const ChatBot = () => {
   return (
     <div className="chat-bot-container">
       <Fab
-        color="primary"
         aria-label="chat"
         onClick={() => setIsOpen(true)}
         sx={{
@@ -89,9 +88,13 @@ const ChatBot = () => {
           right: 20,
           display: isOpen ? 'none' : 'flex',
           zIndex: 1000,
+          bgcolor: '#0059b3', // Primary color
+          '&:hover': {
+            bgcolor: '#006dd9', // Slightly darker on hover
+          }
         }}
       >
-        <ChatIcon />
+        <ChatIcon sx={{ color: 'white' }} />
       </Fab>
 
       <Paper

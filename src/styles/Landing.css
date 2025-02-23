@@ -1,7 +1,7 @@
 :root {
-    --primary-100:#00ADB5;
-    --primary-200:#AAE3E2;
-    --primary-300:#fdf6fd;
+    --primary-100:#0059b3;
+    --primary-200:#006dd9;
+    --primary-300:#e6f2ff;
     --accent-100:#AC7DD2;
     --accent-200:#fff4ff;
     --text-100:#EEEEEE;
@@ -441,16 +441,18 @@ body {
 
 .testimonial-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .client-image {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   object-fit: cover;
+  border: 3px solid var(--primary-100);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .testimonial-text {
@@ -497,6 +499,11 @@ body {
   .testimonials-grid {
     grid-template-columns: 1fr;
     max-width: 500px;
+  }
+
+  .client-image {
+    width: 60px;
+    height: 60px;
   }
 }
 
