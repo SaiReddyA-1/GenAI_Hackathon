@@ -22,6 +22,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -35,6 +36,9 @@ const Auth = () => {
       if (isSignUp) {
         if (password !== confirmPassword) {
           throw new Error("Passwords don't match");
+        }
+        if (!username.trim() && isSignUp) {
+          throw new Error("Username is required");
         }
         await createUserWithEmailAndPassword(auth, email, password);
       } else {
@@ -59,6 +63,14 @@ const Auth = () => {
     setEmail('');
     setPassword('');
     setConfirmPassword('');
+    setUsername('');
+  };
+
+  const handleClearForm = () => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setUsername('');
   };
 
   return (
@@ -108,6 +120,18 @@ const Auth = () => {
           )}
 
           <form onSubmit={handleSubmit}>
+            {isSignUp && (
+              <TextField
+                fullWidth
+                label="Username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                margin="normal"
+                required
+                sx={{ mb: 2 }}
+              />
+            )}
             <TextField
               fullWidth
               label="Email Address"
