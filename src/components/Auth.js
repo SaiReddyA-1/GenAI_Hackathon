@@ -9,13 +9,17 @@ import {
   Link,
   Grid,
   Alert,
-  Paper
+  Paper,
+  Divider
 } from '@mui/material';
 import { auth } from '../config/firebase';
 import { 
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword 
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
+import GoogleIcon from '@mui/icons-material/Google';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -26,6 +30,20 @@ const Auth = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error('Google Sign-in error:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -186,18 +204,30 @@ const Auth = () => {
 
             <Button
               type="submit"
-              variant="contained"
               fullWidth
-              sx={{
-                mt: 2,
-                mb: 2,
-                height: '48px',
-                borderRadius: '4px',
-                textTransform: 'none'
-              }}
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
               disabled={loading}
             >
-              {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Login')}
+              {isSignUp ? 'Sign Up' : 'Sign In'}
+            </Button>
+
+            <Divider sx={{ my: 2 }}>OR</Divider>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              sx={{ 
+                mb: 2,
+                display: 'flex',
+                gap: 1,
+                textTransform: 'none'
+              }}
+              startIcon={<GoogleIcon />}
+            >
+              Sign in with Google
             </Button>
 
             <Box sx={{ textAlign: 'center' }}>
