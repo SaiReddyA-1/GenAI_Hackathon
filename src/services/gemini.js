@@ -93,7 +93,7 @@ const generatePrompt = (formData) => {
 export const getCompetitorsWithGemini = async (formData) => {
   try {
     console.log('Fetching detailed competitor information with Gemini API...');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     const prompt = `Identify the top three competitors for the startup idea: ${formData.startupIdea}. For each competitor, provide the following details in a simple format:
 
 Competitor 1:
@@ -164,7 +164,7 @@ export const analyzeWithGemini = async (formData) => {
     console.log('Starting analysis with Gemini API...');
     const competitors = await getCompetitorsWithGemini(formData);
     formData.competitors = competitors.map(competitor => competitor.name).join(', ');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     const prompt = generatePrompt(formData);
     console.log('Generated prompt:', prompt);
 
@@ -372,7 +372,7 @@ const parseSwotData = (text) => {
 export const getStartupInsightsWithGemini = async (formData) => {
   try {
     console.log('Fetching startup insights with Gemini API...');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     // Get SWOT Analysis
     const swotPrompt = generateSwotPrompt(formData);
@@ -525,7 +525,7 @@ export const getStartupInsightsWithGemini = async (formData) => {
 
 export const getLiveInsightWithGemini = async (prompt) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
     // Modify the prompt to request markdown format and concise response
     const enhancedPrompt = `${prompt}\n\nProvide a concise response in markdown format with bullet points and sub-points. Focus on 2-3 main categories with 2-3 specific actionable points under each. Keep the total response under 300 words.`;

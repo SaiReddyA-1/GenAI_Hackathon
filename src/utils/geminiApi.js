@@ -4,7 +4,7 @@ const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY);
 
 export const analyzeMarketData = async (topic) => {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     
     const prompt = `Analyze the market data for ${topic} and provide the following information in JSON format:
     1. Target audience demographics (age groups, interests, locations) with percentages

@@ -64,7 +64,7 @@ class GeminiService {
     if (!API_KEY) {
       throw new Error('Gemini API key is not configured');
     }
-    this.model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    this.model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
   }
 
   async sendMessage(message) {
