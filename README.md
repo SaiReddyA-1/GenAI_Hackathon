@@ -2,6 +2,10 @@
 
 A comprehensive web application that leverages AI and market data to provide in-depth startup analysis, market insights, and competitive intelligence.
 
+## Live Demo
+
+[Visit the live application](https://genai-hackathon-8a609.web.app/)
+
 ## Features
 
 - **AI-Powered Analysis**
