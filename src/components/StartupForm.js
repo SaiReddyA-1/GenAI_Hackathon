@@ -1385,6 +1385,12 @@ const StartupForm = () => {
       marketingStrategies: comp.strategies
     })) || []);
     
+    // Store the analysis ID and market data in localStorage for the charts dashboard
+    localStorage.setItem('marketAnalysisData', JSON.stringify({
+      ...marketData,
+      analysisId: item.id
+    }));
+    
     // Move to the competitors step
     setActiveStep(4);
   };
