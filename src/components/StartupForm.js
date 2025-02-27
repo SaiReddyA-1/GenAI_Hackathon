@@ -207,48 +207,6 @@ const StartupForm = () => {
     }
   };
 
-  // Function to load a history item
-  const loadHistoryItem = (item) => {
-    try {
-      if (!item || !item.marketData) {
-        setError('Invalid analysis data');
-        return;
-      }
-      
-      const marketData = item.marketData;
-      
-      // Set the analysis data from the history item
-      setCompetitors(marketData.competitors || []);
-      setInsights(marketData);
-      setAnalysis(marketData);
-      setShowHistory(false);
-      
-      // Additional processing from the second function
-      // Set the insights with specific structure
-      setInsights({
-        demographics: marketData.demographics,
-        marketAnalysis: {
-          current_growth_rate: marketData.marketSize?.[marketData.marketSize.length - 1]?.value
-        },
-        swot: marketData.swot
-      });
-      
-      // Format competitors data
-      setCompetitors(marketData.competitors?.map(comp => ({
-        name: comp.name,
-        marketShare: comp.marketShare,
-        targetAudience: comp.targetMarket,
-        marketingStrategies: comp.strategies
-      })) || []);
-      
-      // Move to the competitors step
-      setActiveStep(4);
-    } catch (error) {
-      console.error('Error loading history item:', error);
-      setError('Failed to load analysis data');
-    }
-  };
-
   const renderBasicInfo = () => (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -1400,6 +1358,36 @@ const StartupForm = () => {
       </div>
     );
   };
+  
+  // Function to load a history item
+  const loadHistoryItem = (item) => {
+    // Get the market data from the selected history item
+    const marketData = item.marketData;
+    
+    if (!marketData) return;
+    
+    // Close the history modal
+    setShowHistory(false);
+    
+    // Set the insights and competitors from the history item
+    setInsights({
+      demographics: marketData.demographics,
+      marketAnalysis: {
+        current_growth_rate: marketData.marketSize?.[marketData.marketSize.length - 1]?.value
+      },
+      swot: marketData.swot
+    });
+    
+    setCompetitors(marketData.competitors?.map(comp => ({
+      name: comp.name,
+      marketShare: comp.marketShare,
+      targetAudience: comp.targetMarket,
+      marketingStrategies: comp.strategies
+    })) || []);
+    
+    // Move to the competitors step
+    setActiveStep(4);
+  };
 
   return (
     <Box sx={{ 
@@ -1772,8 +1760,6 @@ const StartupForm = () => {
       </Paper>
     </Box>
   );
-  
-  // The processHistoryItem functionality has been merged into loadHistoryItem
-}
+};
 
 export default StartupForm;
