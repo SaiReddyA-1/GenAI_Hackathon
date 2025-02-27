@@ -93,13 +93,13 @@ const AnalysisDashboard = ({ analysis }) => {
   }
 
   const {
-    overview,
-    marketAnalysis,
-    financialProjections,
-    aiRecommendations,
-    competitorAnalysis,
-    marketTrends,
-  } = analysisData;
+    overview = {},
+    marketAnalysis = {},
+    financialProjections = {},
+    aiRecommendations = {},
+    competitorAnalysis = {},
+    marketTrends = {},
+  } = analysisData || {};
 
   console.log('AnalysisDashboard - Full analysis data:', analysisData);
   console.log('AnalysisDashboard - Market Trends:', marketTrends);
@@ -151,7 +151,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 </Typography>
               </Box>
               <Typography variant="h4" component="p" sx={{ mb: 1, fontWeight: 700 }}>
-                +{overview.growthRate}%
+                +{overview?.growthRate || '0'}%
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Year over year
@@ -183,7 +183,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 </Typography>
               </Box>
               <Typography variant="h4" component="p" sx={{ mb: 1, fontWeight: 700 }}>
-                {overview.marketSize}
+                {overview?.marketSize || 'N/A'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Market Size
@@ -215,7 +215,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 </Typography>
               </Box>
               <Typography variant="h4" component="p" sx={{ mb: 1, fontWeight: 700 }}>
-                {overview.competitorCount}
+                {overview?.competitorCount || '0'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Direct competitors
@@ -247,7 +247,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 </Typography>
               </Box>
               <Typography variant="h4" component="p" sx={{ mb: 1, fontWeight: 700 }}>
-                {formatCurrency(financialProjections.estimatedFunding.initialFunding)}
+                {formatCurrency(financialProjections?.estimatedFunding?.initialFunding)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Required funding
@@ -274,7 +274,7 @@ const AnalysisDashboard = ({ analysis }) => {
                       Market Insights
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#4338ca' }}>
-                      {marketAnalysis.trendAnalysis}
+                      {marketAnalysis?.trendAnalysis || 'No trend analysis available'}
                     </Typography>
                   </Box>
                 </Grid>
@@ -303,7 +303,7 @@ const AnalysisDashboard = ({ analysis }) => {
                       Competition Analysis
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#166534' }}>
-                      {competitorAnalysis.insights}
+                      {competitorAnalysis?.insights || 'No competitor insights available'}
                     </Typography>
                   </Box>
                 </Grid>
@@ -319,7 +319,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 <Grid item xs={12} md={8}>
                   <Box sx={{ height: 300 }}>
                     <ResponsiveContainer>
-                      <BarChart data={financialProjections.projectionCharts.financial}>
+                      <BarChart data={financialProjections?.projectionCharts?.financial || []}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="month" />
                         <YAxis />
@@ -338,7 +338,7 @@ const AnalysisDashboard = ({ analysis }) => {
                       Financial Insights
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#92400e' }}>
-                      {financialProjections.insights}
+                      {financialProjections?.insights || 'No financial insights available'}
                     </Typography>
                   </Box>
                 </Grid>
@@ -357,7 +357,7 @@ const AnalysisDashboard = ({ analysis }) => {
                   Market Opportunity
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#4338ca' }}>
-                  {marketAnalysis.trendAnalysis}
+                  {marketAnalysis?.trendAnalysis || 'No market trend analysis available'}
                 </Typography>
               </Box>
             </Grid>
@@ -367,7 +367,7 @@ const AnalysisDashboard = ({ analysis }) => {
                   Growth Strategy
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#166534' }}>
-                  {aiRecommendations.growthStrategy}
+                  {aiRecommendations?.growthStrategy || 'No growth strategy available'}
                 </Typography>
               </Box>
             </Grid>
@@ -377,7 +377,7 @@ const AnalysisDashboard = ({ analysis }) => {
                   Risk Mitigation
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#92400e' }}>
-                  {aiRecommendations.riskMitigation.join(', ')}
+                  {aiRecommendations?.riskMitigation?.join(', ') || 'No risk mitigation strategies available'}
                 </Typography>
               </Box>
             </Grid>
