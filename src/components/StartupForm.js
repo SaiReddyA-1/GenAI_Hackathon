@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   TextField,
@@ -27,7 +27,7 @@ import {
   Divider,
 } from '@mui/material';
 import { db } from '../config/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { analyzeStartupIdea } from '../services/openai';
 import { getCompetitorsWithGemini, getStartupInsightsWithGemini, getLiveInsightWithGemini } from '../services/gemini';
 import useAuth from '../hooks/useAuth';
@@ -169,7 +169,43 @@ const StartupForm = () => {
   const [insights, setInsights] = useState(null);
   const [liveInsights, setLiveInsights] = useState({});
   const [loadingQuestion, setLoadingQuestion] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const { user } = useAuth();
+
+  // Function to fetch analysis history from Firestore
+  const fetchAnalysisHistory = async () => {
+    if (!user) return;
+    
+    try {
+      setLoadingHistory(true);
+      setShowHistory(true);
+      
+      const analysisQuery = query(
+        collection(db, 'marketAnalysis'),
+        where('userId', '==', user.uid),
+        orderBy('timestamp', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(analysisQuery);
+      const historyItems = [];
+      
+      querySnapshot.forEach((doc) => {
+        historyItems.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      setHistoryData(historyItems);
+    } catch (error) {
+      console.error('Error fetching history:', error);
+      setError('Failed to load analysis history');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const renderBasicInfo = () => (
     <Grid container spacing={3}>
@@ -1432,9 +1468,23 @@ const StartupForm = () => {
               mb: 3
             }}>
               <CardContent sx={{ p: 4 }}>
-                {/* Sample Data Button */}
+                {/* Sample Data and History Buttons */}
                 {!insights && (
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3, gap: 2 }}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => fetchAnalysisHistory()}
+                      sx={{
+                        color: '#6c5ce7',
+                        borderColor: '#6c5ce7',
+                        '&:hover': {
+                          borderColor: '#5f50e1',
+                          backgroundColor: 'rgba(108, 92, 231, 0.1)'
+                        }
+                      }}
+                    >
+                      History
+                    </Button>
                     <Button
                       variant="outlined"
                       onClick={() => setFormData(SAMPLE_DATA)}
@@ -1580,9 +1630,136 @@ const StartupForm = () => {
           </Alert>
         )}
         {renderLiveInsightsSection()}
+        
+        {/* History Modal */}
+        {showHistory && (
+          <Box
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 9999
+            }}
+            onClick={() => setShowHistory(false)}
+          >
+            <Box
+              sx={{
+                backgroundColor: '#1e2430',
+                borderRadius: 2,
+                p: 4,
+                maxWidth: '800px',
+                width: '90%',
+                maxHeight: '80vh',
+                overflowY: 'auto'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Typography variant="h5" sx={{ color: 'white', mb: 3 }}>
+                Analysis History
+              </Typography>
+              
+              {loadingHistory ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : historyData.length > 0 ? (
+                historyData.map((item, index) => (
+                  <Card 
+                    key={index} 
+                    sx={{ 
+                      mb: 2, 
+                      backgroundColor: '#242936',
+                      '&:hover': {
+                        backgroundColor: '#2d3748',
+                        cursor: 'pointer'
+                      }
+                    }}
+                    onClick={() => loadHistoryItem(item)}
+                  >
+                    <CardContent>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle1" sx={{ color: 'white' }}>
+                            {item.marketData?.competitors?.[0]?.name ? `${item.marketData.competitors[0].name} Analysis` : 'Startup Analysis'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                            {item.timestamp?.toDate().toLocaleString() || 'No date'}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                            {item.marketData?.competitors?.length || 0} competitors analyzed
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                            Market size: {item.marketData?.marketSize?.[item.marketData.marketSize.length - 1]?.value || 'N/A'}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Typography sx={{ color: '#a0aec0', textAlign: 'center', my: 4 }}>
+                  No analysis history found
+                </Typography>
+              )}
+              
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                <Button 
+                  variant="contained" 
+                  onClick={() => setShowHistory(false)}
+                  sx={{
+                    backgroundColor: '#6c5ce7',
+                    '&:hover': {
+                      backgroundColor: '#5f50e1'
+                    }
+                  }}
+                >
+                  Close
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        )}
       </Paper>
     </Box>
   );
+  
+  // Function to load a history item
+  const loadHistoryItem = (item) => {
+    // Get the market data from the selected history item
+    const marketData = item.marketData;
+    
+    if (!marketData) return;
+    
+    // Close the history modal
+    setShowHistory(false);
+    
+    // Set the insights and competitors from the history item
+    setInsights({
+      demographics: marketData.demographics,
+      marketAnalysis: {
+        current_growth_rate: marketData.marketSize?.[marketData.marketSize.length - 1]?.value
+      },
+      swot: marketData.swot
+    });
+    
+    setCompetitors(marketData.competitors?.map(comp => ({
+      name: comp.name,
+      marketShare: comp.marketShare,
+      targetAudience: comp.targetMarket,
+      marketingStrategies: comp.strategies
+    })) || []);
+    
+    // Move to the competitors step
+    setActiveStep(4);
+  };
 };
 
 export default StartupForm;
