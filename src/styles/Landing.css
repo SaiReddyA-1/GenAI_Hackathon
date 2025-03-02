@@ -45,7 +45,7 @@
 
 @media (max-width: 768px) {
   .hero {
-    padding: 40px 20px;
+    padding: 10px 20px;
     min-height: auto;
   }
 
@@ -338,7 +338,7 @@
 /* Media Queries */
 @media (max-width: 768px) {
   .analyzer-section {
-    padding: 70px 1rem 90px;
+    padding: 30px 1rem 70px;
   }
   
   .analyzer-content h2 {
@@ -351,6 +351,22 @@
   
   .analyzer-section .search-container {
     padding: 1.75rem;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .analyzer-section .search-input {
+    width: 100%;
+    padding-right: 20px;
+    border-radius: 8px;
+  }
+  
+  .analyzer-section .search-button {
+    position: static;
+    width: 40%;
+    margin: 10px auto 0;
+    transform: none;
+    border-radius: 8px;
   }
   
   .decoration-1, .decoration-2 {
@@ -361,11 +377,12 @@
 
 @media (max-width: 480px) {
   .analyzer-section {
-    padding: 50px 1rem 70px;
+    padding: 20px 1rem 60px;
   }
   
   .analyzer-content h2 {
     font-size: 1.8rem;
+    margin-top: 10px;
   }
   
   .analyzer-content p {
@@ -378,16 +395,12 @@
   
   .analyzer-section .search-input {
     font-size: 1rem;
-    padding: 1rem 110px 1rem 1.25rem;
+    padding: 15px;
+    height: 50px;
   }
   
-  .analyzer-section .search-button {
-    font-size: 0.9rem;
-    padding: 0 1rem;
-  }
-  
-  .analyzer-section .social-proof {
-    font-size: 0.9rem;
+  .hero {
+    padding-top: 80px;
   }
 }
 
