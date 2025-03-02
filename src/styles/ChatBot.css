@@ -97,3 +97,45 @@
 .markdown-content a:hover {
   text-decoration: underline;
 }
+
+.chat-fab {
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  background: linear-gradient(135deg, #0059b3, #4a7eff) !important;
+}
+
+.chat-fab:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 8px 16px rgba(0, 89, 179, 0.3) !important;
+  background: linear-gradient(135deg, #0066cc, #5e8eff) !important;
+}
+
+.chat-toast {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-width: 280px;
+  animation: fadeInUp 0.3s ease-out;
+  border-left: 4px solid #0059b3;
+}
+
+.chat-toast p {
+  margin: 0;
+  font-size: 14px;
+  color: #2d3748;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

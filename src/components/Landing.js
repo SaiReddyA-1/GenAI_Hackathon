@@ -19,7 +19,7 @@ const Landing = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeService, setActiveService] = useState('machine-learning');
+  const [activeService, setActiveService] = useState('');
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',

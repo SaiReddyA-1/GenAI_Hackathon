@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Paper, IconButton, Fab, TextField, Typography, CircularProgress } from '@mui/material';
-import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
+import { BsChatSquareTextFill } from 'react-icons/bs';
 import ReactMarkdown from 'react-markdown';
 import geminiService from '../services/geminiService';
 import '../styles/ChatBot.css';
@@ -14,6 +14,7 @@ const ChatBot = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -23,6 +24,23 @@ const ChatBot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Show toast notification after 3 seconds
+    const timer = setTimeout(() => {
+      setShowToast(true);
+    }, 6000);
+
+    // Hide toast after 8 seconds total (visible for 5 seconds)
+    const hideTimer = setTimeout(() => {
+      setShowToast(false);
+    }, 12000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(hideTimer);
+    };
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -77,11 +95,21 @@ const ChatBot = () => {
     }
   };
 
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
     <div className="chat-bot-container">
+      {showToast && (
+        <div className="chat-toast">
+          <p>👋 Hi! I'm StartupLens Bot. Need help with your startup idea?</p>
+        </div>
+      )}
       <Fab
         aria-label="chat"
-        onClick={() => setIsOpen(true)}
+        className="chat-fab"
+        onClick={toggleChat}
         sx={{
           position: 'fixed',
           bottom: 20,
@@ -94,7 +122,7 @@ const ChatBot = () => {
           }
         }}
       >
-        <ChatIcon sx={{ color: 'white' }} />
+        <BsChatSquareTextFill size={24} color="white" />
       </Fab>
 
       <Paper
