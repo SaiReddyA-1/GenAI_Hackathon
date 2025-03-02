@@ -55,6 +55,63 @@ const Landing = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Add typing animation effect to search placeholder
+  useEffect(() => {
+    const searchInput = document.querySelector('.search-input');
+    if (!searchInput) return;
+    
+    const placeholders = [
+      'Enter your startup idea here...',
+      'AI-powered food delivery app...',
+      'Educational platform for coding...',
+      'Health and fitness tracker...',
+      'Sustainable fashion marketplace...'
+    ];
+    
+    let currentPlaceholder = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let typingSpeed = 100;
+    
+    const typeEffect = () => {
+      const currentText = placeholders[currentPlaceholder];
+      
+      if (isDeleting) {
+        charIndex--;
+        typingSpeed = 50;
+      } else {
+        charIndex++;
+        typingSpeed = 100;
+      }
+      
+      searchInput.placeholder = currentText.substring(0, charIndex);
+      
+      if (!isDeleting && charIndex === currentText.length) {
+        // Pause at the end of typing
+        isDeleting = true;
+        typingSpeed = 1500;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        currentPlaceholder = (currentPlaceholder + 1) % placeholders.length;
+        typingSpeed = 500;
+      }
+      
+      setTimeout(typeEffect, typingSpeed);
+    };
+    
+    // Start the typing effect
+    setTimeout(typeEffect, 1500);
+    
+    // Clean up on component unmount
+    return () => {
+      // Clear all timeouts
+      let id = window.setTimeout(() => {}, 0);
+      while (id--) {
+        window.clearTimeout(id);
+      }
+    };
+  }, []);
+
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -72,6 +129,28 @@ const Landing = () => {
       // Navigate to dashboard with the search query
       navigate('/dashboard', { state: { startupIdea: searchQuery } });
     }
+  };
+
+  const handleSearchButtonHover = (e) => {
+    const button = e.currentTarget;
+    
+    // Create ripple effect
+    const ripple = document.createElement('span');
+    ripple.classList.add('button-ripple');
+    
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+    
+    button.appendChild(ripple);
+    
+    // Remove ripple after animation
+    setTimeout(() => {
+      ripple.remove();
+    }, 600);
   };
 
   const handleKeyPress = (e) => {
@@ -131,6 +210,7 @@ const Landing = () => {
 
   return (
     <div className="landing">
+      <a href="#main-content" className="skip-to-content">Skip to main content</a>
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
         <div className="navbar-content">
           <Link to="/" className="logo" onClick={() => setIsMobileMenuOpen(false)}>
@@ -173,7 +253,8 @@ const Landing = () => {
         </div>
       </nav>
 
-      <section className="hero">
+      <section className="hero" id="main-content">
+        <div className="hero-particles" id="particles-js"></div>
         <div className="hero-content">
           <div className="hero-text">
             <h1>
@@ -184,18 +265,49 @@ const Landing = () => {
               Get comprehensive startup analysis powered by AI. Enter your idea and receive detailed market research, competitor analysis, and strategic recommendations in minutes.
             </p>
           </div>
-          <div className="search-container">
-            <input 
-              type="text" 
-              className="search-input"
-              placeholder="Enter your startup idea here..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
-            />
-            <button className="search-button" onClick={handleSearch}>
-              Analyze Now
-            </button>
+          <div className="hero-visual">
+            <img src={heroIllustration} alt="AI-powered startup analysis" className="hero-illustration" />
+            <div className="floating-shape shape-1"></div>
+            <div className="floating-shape shape-2"></div>
+            <div className="floating-shape shape-3"></div>
+          </div>
+        </div>
+        <div className="wave-divider">
+          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
+          </svg>
+        </div>
+      </section>
+
+      <section className="analyzer-section">
+        <div className="analyzer-decoration decoration-1"></div>
+        <div className="analyzer-decoration decoration-2"></div>
+        <div className="analyzer-container">
+          <div className="analyzer-content">
+            <h2>Ready to Analyze Your Startup Idea?</h2>
+            <p>Enter your startup concept below and our AI will generate comprehensive insights to help you evaluate market potential, identify competitors, and develop successful strategies.</p>
+            <div className="search-container">
+              <input 
+                type="text" 
+                className="search-input"
+                placeholder="Enter your startup idea here..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                aria-label="Startup idea input"
+              />
+              <button 
+                className="search-button" 
+                onClick={handleSearch} 
+                onMouseDown={handleSearchButtonHover}
+                aria-label="Analyze startup idea"
+              >
+                Analyze Now
+              </button>
+            </div>
+            <div className="social-proof">
+              Trusted by 500+ entrepreneurs and startup founders
+            </div>
           </div>
         </div>
       </section>
