@@ -19,7 +19,9 @@
       ]
     }
   ],
-  "hosting": {
+  "hosting": [
+  {
+    "site": "startup-lens",
     "public": "build",
     "ignore": [
       "firebase.json",
@@ -33,6 +35,22 @@
       }
     ]
   },
+  {
+    "site": "genai-hackathon-8a609",
+    "public": "build",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+  ],
   "storage": {
     "rules": "storage.rules"
   }
