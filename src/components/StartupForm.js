@@ -386,9 +386,17 @@ const StartupForm = () => {
       // Save analysis to Firebase
       if (user) {
         try {
+          // Ensure competitors have consistent property names
+          const mappedCompetitors = competitorData.map(comp => ({
+            name: comp.name || '',
+            marketShare: typeof comp.marketShare === 'number' ? comp.marketShare : 0,
+            targetAudience: comp.targetAudience || '',
+            marketingStrategies: comp.marketingStrategies || ''
+          }));
+          
           const completeData = {
             ...formData,
-            competitors: competitorData,
+            competitors: mappedCompetitors,
             ...insightsData
           };
           
@@ -959,6 +967,12 @@ const StartupForm = () => {
     console.log('Market data keys:', Object.keys(marketData));
     console.log('SWOT data:', marketData.swot);
     console.log('Business Strategy data:', marketData.businessStrategy);
+    console.log('Competitors data:', marketData.competitors);
+    
+    if (marketData.competitors && marketData.competitors.length > 0) {
+      console.log('First competitor structure:', marketData.competitors[0]);
+      console.log('First competitor keys:', Object.keys(marketData.competitors[0]));
+    }
     
     setShowHistory(false);
     
@@ -1010,12 +1024,23 @@ const StartupForm = () => {
     }
     
     // Set competitors with all their data
-    setCompetitors(marketData.competitors?.map(comp => ({
-      name: comp.name || '',
-      marketShare: comp.marketShare || 0,
-      targetAudience: comp.targetMarket || '',
-      marketingStrategies: comp.strategies || ''
-    })) || []);
+    if (marketData.competitors && marketData.competitors.length > 0) {
+      // Deep clone the competitor objects to ensure we have all properties
+      const mappedCompetitors = marketData.competitors.map(comp => {
+        return {
+          name: comp.name || '',
+          marketShare: typeof comp.marketShare === 'number' ? comp.marketShare : 0,
+          // Handle different possible property names for these fields
+          targetAudience: comp.targetAudience || comp.targetMarket || '',
+          marketingStrategies: comp.marketingStrategies || comp.strategies || ''
+        };
+      });
+      
+      console.log('Mapped competitors:', mappedCompetitors);
+      setCompetitors(mappedCompetitors);
+    } else {
+      setCompetitors([]);
+    }
     
     // Save complete market data to localStorage
     localStorage.setItem('marketAnalysisData', JSON.stringify({
