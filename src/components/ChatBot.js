@@ -29,12 +29,12 @@ const ChatBot = () => {
     // Show toast notification after 3 seconds
     const timer = setTimeout(() => {
       setShowToast(true);
-    }, 6000);
+    }, 15000);
 
     // Hide toast after 8 seconds total (visible for 5 seconds)
     const hideTimer = setTimeout(() => {
       setShowToast(false);
-    }, 12000);
+    }, 20000);
 
     return () => {
       clearTimeout(timer);

@@ -99,13 +99,6 @@ const StartupForm = () => {
       // Clear localStorage after using
       localStorage.removeItem('returnToStep');
     }
-
-    // Check if we should show history on load (set by NavbarWrapper)
-    const showHistoryFlag = localStorage.getItem('showHistoryOnLoad');
-    if (showHistoryFlag === 'true') {
-      fetchAnalysisHistory();
-      localStorage.removeItem('showHistoryOnLoad');
-    }
   }, []);
 
   // Function to fetch analysis history from Firestore
@@ -1313,9 +1306,13 @@ const StartupForm = () => {
   return (
     <Box sx={{ 
       minHeight: '100vh', 
-      width: '100%',
+      minWidth: '100vw',
       backgroundColor: '#1a1f2e',
-      position: 'relative', 
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       overflowY: 'auto',
       p: 4,
       color: 'white'
