@@ -163,7 +163,7 @@ const StartupForm = () => {
             '& .MuiOutlinedInput-root': {
               backgroundColor: '#1e2430',
               '& input, & textarea': {
-                color: '#e2e8f0',
+                color: '#000000',
                 '&::placeholder': {
                   color: '#a0aec0',
                   opacity: 0.7
@@ -200,7 +200,7 @@ const StartupForm = () => {
             '& .MuiOutlinedInput-root': {
               backgroundColor: '#1e2430',
               '& .MuiSelect-select': {
-                color: '#e2e8f0'
+                color: '#000000'
               },
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: 'transparent'
@@ -260,7 +260,7 @@ const StartupForm = () => {
             '& .MuiOutlinedInput-root': {
               backgroundColor: '#1e2430',
               '& input, & textarea': {
-                color: '#e2e8f0',
+                color: '#000000',
                 '&::placeholder': {
                   color: '#a0aec0',
                   opacity: 0.7
@@ -398,6 +398,11 @@ const StartupForm = () => {
       return docRef.id;
     } catch (err) {
       console.error('Error saving to Firebase:', err);
+      // Check for connection refused error (common when emulator isn't running)
+      if (err.message && (err.message.includes('ERR_CONNECTION_REFUSED') || 
+                          err.message.includes('Failed to fetch'))) {
+        throw new Error('Could not connect to Firebase. If you are in development mode, please make sure the Firebase emulator is running.');
+      }
       throw err;
     }
   };
@@ -473,6 +478,21 @@ const StartupForm = () => {
           }));
         } catch (err) {
           console.error('Error saving to Firebase:', err);
+          
+          // Handle Firebase connection errors but still show analysis
+          if (err.message && err.message.includes('Firebase emulator')) {
+            setError('Firebase connection error: ' + err.message + 
+              ' Your analysis has been generated but could not be saved.');
+          } else {
+            setError('Your analysis has been generated but could not be saved to the database.');
+          }
+          
+          // Still store data in localStorage for dashboard charts even if Firebase save fails
+          localStorage.setItem('marketAnalysisData', JSON.stringify({
+            ...formData,
+            competitors: competitorData,
+            ...insightsData,
+          }));
         }
       }
     } catch (error) {
@@ -1362,6 +1382,20 @@ const StartupForm = () => {
           ))}
         </Stepper>
 
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3, 
+              '& .MuiAlert-message': { color: '#000' },
+              '& .MuiAlert-icon': { color: '#f44336' }
+            }}
+            onClose={() => setError('')}
+          >
+            {error}
+          </Alert>
+        )}
+        
         {!insights ? (
           <>
             <Card sx={{ 
@@ -1500,12 +1534,6 @@ const StartupForm = () => {
           </Box>
         )}
 
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-        
         {/* History Modal */}
         {showHistory && (
           <Box

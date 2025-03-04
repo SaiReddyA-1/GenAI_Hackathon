@@ -34,7 +34,7 @@ const ChatBot = () => {
     // Hide toast after 8 seconds total (visible for 5 seconds)
     const hideTimer = setTimeout(() => {
       setShowToast(false);
-    }, 20000);
+    }, 18000);
 
     return () => {
       clearTimeout(timer);
