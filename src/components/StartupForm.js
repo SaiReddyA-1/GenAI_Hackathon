@@ -321,12 +321,34 @@ const StartupForm = () => {
 
   const saveToFirebase = async (marketData) => {
     try {
+      // Prepare business strategy data to ensure arrays are properly handled
+      let preparedData = { ...marketData };
+      
+      // Ensure businessStrategy exists
+      if (preparedData.businessStrategy) {
+        // Convert arrays to strings to avoid issues with Firebase
+        if (Array.isArray(preparedData.businessStrategy.userAcquisitionStrategy)) {
+          preparedData.businessStrategy.userAcquisitionStrategy = 
+            preparedData.businessStrategy.userAcquisitionStrategy.join('|||');
+        }
+        
+        if (Array.isArray(preparedData.businessStrategy.marketTrends)) {
+          preparedData.businessStrategy.marketTrends = 
+            preparedData.businessStrategy.marketTrends.join('|||');
+        }
+        
+        if (Array.isArray(preparedData.businessStrategy.businessModels)) {
+          preparedData.businessStrategy.businessModels = 
+            preparedData.businessStrategy.businessModels.join('|||');
+        }
+      }
+      
       const docRef = await addDoc(collection(db, 'marketAnalysis'), {
         userId: user.uid,
         timestamp: serverTimestamp(),
         marketData: {
-          ...marketData,
-          swot: marketData.swot || {
+          ...preparedData,
+          swot: preparedData.swot || {
             strengths: [],
             weaknesses: [],
             opportunities: [],
@@ -390,8 +412,9 @@ const StartupForm = () => {
           const mappedCompetitors = competitorData.map(comp => ({
             name: comp.name || '',
             marketShare: typeof comp.marketShare === 'number' ? comp.marketShare : 0,
-            targetAudience: comp.targetAudience || '',
-            marketingStrategies: comp.marketingStrategies || ''
+            // Handle different possible property names for these fields
+            targetAudience: comp.targetAudience || comp.targetMarket || '',
+            marketingStrategies: comp.marketingStrategies || comp.strategies || ''
           }));
           
           const completeData = {
@@ -524,28 +547,44 @@ const StartupForm = () => {
                     <Typography variant="h6" sx={{ mb: 2, color: '#e2e8f0' }}>
                       User Acquisition Strategy
                     </Typography>
-                    {insights.businessStrategy.userAcquisitionStrategy && insights.businessStrategy.userAcquisitionStrategy.length > 0 ? (
-                      <List dense>
-                        {insights.businessStrategy.userAcquisitionStrategy.map((strategy, index) => (
-                          <ListItem key={index} sx={{ py: 0.5 }}>
-                            <ListItemIcon sx={{ minWidth: 30 }}>
-                              <ArrowRightIcon sx={{ color: '#6c5ce7' }} />
-                            </ListItemIcon>
-                            <ListItemText 
-                              primary={removeMarkdown(strategy)} 
-                              primaryTypographyProps={{ 
-                                variant: 'body2', 
-                                color: '#a0aec0' 
-                              }} 
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                    ) : (
-                      <Typography variant="body2" sx={{ color: '#a0aec0' }}>
-                        No strategies available
-                      </Typography>
-                    )}
+                    {(() => {
+                      // Handle both array and string formats
+                      const strategies = insights.businessStrategy.userAcquisitionStrategy;
+                      let strategyArray = [];
+                      
+                      if (Array.isArray(strategies) && strategies.length > 0) {
+                        strategyArray = strategies;
+                      } else if (typeof strategies === 'string' && strategies.trim()) {
+                        strategyArray = strategies.split('|||').filter(Boolean);
+                      }
+                      
+                      if (strategyArray.length > 0) {
+                        return (
+                          <List dense>
+                            {strategyArray.map((strategy, index) => (
+                              <ListItem key={index} sx={{ py: 0.5 }}>
+                                <ListItemIcon sx={{ minWidth: 30 }}>
+                                  <ArrowRightIcon sx={{ color: '#6c5ce7' }} />
+                                </ListItemIcon>
+                                <ListItemText 
+                                  primary={removeMarkdown(strategy)} 
+                                  primaryTypographyProps={{ 
+                                    variant: 'body2', 
+                                    color: '#a0aec0' 
+                                  }} 
+                                />
+                              </ListItem>
+                            ))}
+                          </List>
+                        );
+                      } else {
+                        return (
+                          <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                            No strategies available
+                          </Typography>
+                        );
+                      }
+                    })()}
                   </CardContent>
                 </Card>
               </Grid>
@@ -557,28 +596,44 @@ const StartupForm = () => {
                     <Typography variant="h6" sx={{ mb: 2, color: '#e2e8f0' }}>
                       Business Models
                     </Typography>
-                    {insights.businessStrategy.businessModels && insights.businessStrategy.businessModels.length > 0 ? (
-                      <List dense>
-                        {insights.businessStrategy.businessModels.map((model, index) => (
-                          <ListItem key={index} sx={{ py: 0.5 }}>
-                            <ListItemIcon sx={{ minWidth: 30 }}>
-                              <ArrowRightIcon sx={{ color: '#6c5ce7' }} />
-                            </ListItemIcon>
-                            <ListItemText 
-                              primary={removeMarkdown(model)} 
-                              primaryTypographyProps={{ 
-                                variant: 'body2', 
-                                color: '#a0aec0' 
-                              }} 
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                    ) : (
-                      <Typography variant="body2" sx={{ color: '#a0aec0' }}>
-                        No business models available
-                      </Typography>
-                    )}
+                    {(() => {
+                      // Handle both array and string formats
+                      const models = insights.businessStrategy.businessModels;
+                      let modelArray = [];
+                      
+                      if (Array.isArray(models) && models.length > 0) {
+                        modelArray = models;
+                      } else if (typeof models === 'string' && models.trim()) {
+                        modelArray = models.split('|||').filter(Boolean);
+                      }
+                      
+                      if (modelArray.length > 0) {
+                        return (
+                          <List dense>
+                            {modelArray.map((model, index) => (
+                              <ListItem key={index} sx={{ py: 0.5 }}>
+                                <ListItemIcon sx={{ minWidth: 30 }}>
+                                  <ArrowRightIcon sx={{ color: '#6c5ce7' }} />
+                                </ListItemIcon>
+                                <ListItemText 
+                                  primary={removeMarkdown(model)} 
+                                  primaryTypographyProps={{ 
+                                    variant: 'body2', 
+                                    color: '#a0aec0' 
+                                  }} 
+                                />
+                              </ListItem>
+                            ))}
+                          </List>
+                        );
+                      } else {
+                        return (
+                          <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                            No business models available
+                          </Typography>
+                        );
+                      }
+                    })()}
                   </CardContent>
                 </Card>
               </Grid>
@@ -651,28 +706,44 @@ const StartupForm = () => {
                     <Typography variant="h6" sx={{ mb: 2, color: '#e2e8f0' }}>
                       Supporting Market Trends
                     </Typography>
-                    {insights.businessStrategy.marketTrends && insights.businessStrategy.marketTrends.length > 0 ? (
-                      <List dense>
-                        {insights.businessStrategy.marketTrends.map((trend, index) => (
-                          <ListItem key={index} sx={{ py: 0.5 }}>
-                            <ListItemIcon sx={{ minWidth: 30 }}>
-                              <TrendingUpIcon sx={{ color: '#6c5ce7' }} />
-                            </ListItemIcon>
-                            <ListItemText 
-                              primary={removeMarkdown(trend)} 
-                              primaryTypographyProps={{ 
-                                variant: 'body2', 
-                                color: '#a0aec0' 
-                              }} 
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                    ) : (
-                      <Typography variant="body2" sx={{ color: '#a0aec0' }}>
-                        No market trends available
-                      </Typography>
-                    )}
+                    {(() => {
+                      // Handle both array and string formats
+                      const trends = insights.businessStrategy.marketTrends;
+                      let trendArray = [];
+                      
+                      if (Array.isArray(trends) && trends.length > 0) {
+                        trendArray = trends;
+                      } else if (typeof trends === 'string' && trends.trim()) {
+                        trendArray = trends.split('|||').filter(Boolean);
+                      }
+                      
+                      if (trendArray.length > 0) {
+                        return (
+                          <List dense>
+                            {trendArray.map((trend, index) => (
+                              <ListItem key={index} sx={{ py: 0.5 }}>
+                                <ListItemIcon sx={{ minWidth: 30 }}>
+                                  <TrendingUpIcon sx={{ color: '#6c5ce7' }} />
+                                </ListItemIcon>
+                                <ListItemText 
+                                  primary={removeMarkdown(trend)} 
+                                  primaryTypographyProps={{ 
+                                    variant: 'body2', 
+                                    color: '#a0aec0' 
+                                  }} 
+                                />
+                              </ListItem>
+                            ))}
+                          </List>
+                        );
+                      } else {
+                        return (
+                          <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                            No market trends available
+                          </Typography>
+                        );
+                      }
+                    })()}
                   </CardContent>
                 </Card>
               </Grid>
@@ -960,19 +1031,13 @@ const StartupForm = () => {
   const loadHistoryItem = (item) => {
     const marketData = item.marketData;
     
-    if (!marketData) return;
+    if (!marketData) {
+      console.error('No market data available in history item');
+      return;
+    }
     
     console.log('Loading history item:', item);
     console.log('Market data structure:', marketData);
-    console.log('Market data keys:', Object.keys(marketData));
-    console.log('SWOT data:', marketData.swot);
-    console.log('Business Strategy data:', marketData.businessStrategy);
-    console.log('Competitors data:', marketData.competitors);
-    
-    if (marketData.competitors && marketData.competitors.length > 0) {
-      console.log('First competitor structure:', marketData.competitors[0]);
-      console.log('First competitor keys:', Object.keys(marketData.competitors[0]));
-    }
     
     setShowHistory(false);
     
@@ -985,10 +1050,90 @@ const StartupForm = () => {
       });
     }
     
-    // Use the same structure as when data is generated
-    if (marketData.swot) {
-      setInsights(marketData);
-    } else {
+    // Process the market data to ensure consistent format
+    try {
+      // Clone the marketData to avoid mutations
+      const processedData = JSON.parse(JSON.stringify(marketData));
+      
+      // If businessStrategy exists, process array fields
+      if (processedData.businessStrategy) {
+        const bs = processedData.businessStrategy;
+        
+        // Handle userAcquisitionStrategy field
+        try {
+          // Convert string back to array for userAcquisitionStrategy
+          if (typeof bs.userAcquisitionStrategy === 'string' && bs.userAcquisitionStrategy.trim()) {
+            bs.userAcquisitionStrategy = bs.userAcquisitionStrategy.split('|||').filter(Boolean);
+            console.log('Converted userAcquisitionStrategy from string to array:', bs.userAcquisitionStrategy);
+          } else if (!Array.isArray(bs.userAcquisitionStrategy)) {
+            bs.userAcquisitionStrategy = [];
+            console.log('Set empty array for userAcquisitionStrategy');
+          }
+        } catch (err) {
+          console.error('Error processing userAcquisitionStrategy:', err);
+          bs.userAcquisitionStrategy = [];
+        }
+        
+        // Handle marketTrends field
+        try {
+          // Convert string back to array for marketTrends
+          if (typeof bs.marketTrends === 'string' && bs.marketTrends.trim()) {
+            bs.marketTrends = bs.marketTrends.split('|||').filter(Boolean);
+            console.log('Converted marketTrends from string to array:', bs.marketTrends);
+          } else if (!Array.isArray(bs.marketTrends)) {
+            bs.marketTrends = [];
+            console.log('Set empty array for marketTrends');
+          }
+        } catch (err) {
+          console.error('Error processing marketTrends:', err);
+          bs.marketTrends = [];
+        }
+        
+        // Handle businessModels field
+        try {
+          // Convert string back to array for businessModels
+          if (typeof bs.businessModels === 'string' && bs.businessModels.trim()) {
+            bs.businessModels = bs.businessModels.split('|||').filter(Boolean);
+            console.log('Converted businessModels from string to array:', bs.businessModels);
+          } else if (!Array.isArray(bs.businessModels)) {
+            bs.businessModels = [];
+            console.log('Set empty array for businessModels');
+          }
+        } catch (err) {
+          console.error('Error processing businessModels:', err);
+          bs.businessModels = [];
+        }
+      } else {
+        // Create empty businessStrategy object if missing
+        processedData.businessStrategy = {
+          targetUsers: 'N/A',
+          userAcquisitionStrategy: [],
+          businessModels: [],
+          revenuePerUser: 'N/A',
+          minimumInvestment: 'N/A',
+          breakEvenTime: 'N/A',
+          userGrowthRate: 'N/A',
+          marketTrends: []
+        };
+        console.log('Created default businessStrategy object');
+      }
+      
+      // Ensure SWOT data exists
+      if (!processedData.swot) {
+        processedData.swot = {
+          strengths: [],
+          weaknesses: [],
+          opportunities: [],
+          threats: []
+        };
+        console.log('Created default SWOT object');
+      }
+      
+      // Log the processed data
+      console.log('Processed marketData for display:', processedData);
+      setInsights(processedData);
+    } catch (error) {
+      console.error('Error processing market data:', error);
       // Fallback if for some reason the data structure is different
       setInsights({
         demographics: marketData.demographics || {},
@@ -1018,36 +1163,48 @@ const StartupForm = () => {
           userGrowthRate: 'N/A',
           marketTrends: [],
           customerAcquisition: 'N/A',
-          valueProp: 'N/A'
+          valueProp: 'N/A',
+          userAcquisitionStrategy: [],
+          businessModels: []
         }
       });
     }
     
     // Set competitors with all their data
-    if (marketData.competitors && marketData.competitors.length > 0) {
-      // Deep clone the competitor objects to ensure we have all properties
-      const mappedCompetitors = marketData.competitors.map(comp => {
-        return {
-          name: comp.name || '',
-          marketShare: typeof comp.marketShare === 'number' ? comp.marketShare : 0,
-          // Handle different possible property names for these fields
-          targetAudience: comp.targetAudience || comp.targetMarket || '',
-          marketingStrategies: comp.marketingStrategies || comp.strategies || ''
-        };
-      });
-      
-      console.log('Mapped competitors:', mappedCompetitors);
-      setCompetitors(mappedCompetitors);
-    } else {
+    try {
+      if (marketData.competitors && marketData.competitors.length > 0) {
+        // Deep clone the competitor objects to ensure we have all properties
+        const mappedCompetitors = marketData.competitors.map(comp => {
+          return {
+            name: comp.name || '',
+            marketShare: typeof comp.marketShare === 'number' ? comp.marketShare : 0,
+            // Handle different possible property names for these fields
+            targetAudience: comp.targetAudience || comp.targetMarket || '',
+            marketingStrategies: comp.marketingStrategies || comp.strategies || ''
+          };
+        });
+        
+        console.log('Mapped competitors:', mappedCompetitors);
+        setCompetitors(mappedCompetitors);
+      } else {
+        setCompetitors([]);
+      }
+    } catch (error) {
+      console.error('Error processing competitors data:', error);
       setCompetitors([]);
     }
     
     // Save complete market data to localStorage
-    localStorage.setItem('marketAnalysisData', JSON.stringify({
-      ...marketData,
-      analysisId: item.id
-    }));
+    try {
+      localStorage.setItem('marketAnalysisData', JSON.stringify({
+        ...marketData,
+        analysisId: item.id
+      }));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
     
+    // Display the analysis
     setActiveStep(1); // Set to "Generate Report" step (index 1)
   };
 
