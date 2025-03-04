@@ -311,7 +311,19 @@ const StartupForm = () => {
     if (activeStep === STEPS.length - 2) {
       handleSubmit();
     } else {
-      setActiveStep((prevStep) => prevStep + 1);
+      const nextStep = activeStep + 1;
+      
+      // Update step
+      setActiveStep(nextStep);
+      
+      // Update browser history (this will be redundant with the useEffect,
+      // but ensures the formData in history state is current)
+      const stateName = nextStep === 0 ? 'startup-information' : 'generate-report';
+      window.history.pushState(
+        { step: nextStep, formData: JSON.stringify(formData) },
+        '',
+        `${window.location.pathname}#${stateName}`
+      );
     }
   };
 
@@ -322,6 +334,9 @@ const StartupForm = () => {
       return;
     }
     
+    // Calculate previous step
+    const prevStep = activeStep - 1;
+    
     // Reset insights when going back to form to ensure form questions are displayed
     if (activeStep === 1) {
       // Keep a copy of form data to ensure values are preserved
@@ -330,7 +345,17 @@ const StartupForm = () => {
       // Restore form data after resetting insights
       setFormData(formDataCopy);
     }
-    setActiveStep((prevStep) => prevStep - 1);
+    
+    // Update step state
+    setActiveStep(prevStep);
+    
+    // Update browser history
+    const stateName = prevStep === 0 ? 'startup-information' : 'generate-report';
+    window.history.pushState(
+      { step: prevStep, formData: JSON.stringify(formData) },
+      '',
+      `${window.location.pathname}#${stateName}`
+    );
   };
 
   const saveToFirebase = async (marketData) => {
@@ -1221,6 +1246,61 @@ const StartupForm = () => {
     // Display the analysis
     setActiveStep(1); // Set to "Generate Report" step (index 1)
   };
+
+  // Add browser history listener for back/forward buttons
+  useEffect(() => {
+    // Save current step to browser history state
+    const updateBrowserHistory = (step) => {
+      // Create a meaningful history state name based on the step
+      const stateName = step === 0 ? 'startup-information' : 'generate-report';
+      
+      // Push a new history state when changing steps (except on initial load)
+      window.history.pushState(
+        { step, formData: JSON.stringify(formData) },
+        '',
+        `${window.location.pathname}#${stateName}`
+      );
+    };
+
+    // Handle popstate event (when browser back/forward buttons are clicked)
+    const handlePopState = (event) => {
+      // Handle navigation to landing page when going back from step 0
+      if (!event.state && activeStep === 0) {
+        // Navigate to landing page
+        navigate('/');
+        return;
+      }
+      
+      // If we have state in the history event, restore it
+      if (event.state && typeof event.state.step === 'number') {
+        // Don't navigate away from the form - handle it internally
+        event.preventDefault();
+        
+        // Restore previous step
+        setActiveStep(event.state.step);
+        
+        // If coming back to step 0 from step 1, reset insights to show the form
+        if (event.state.step === 0 && activeStep === 1) {
+          const previousFormData = event.state.formData ? JSON.parse(event.state.formData) : formData;
+          setInsights(null);
+          setFormData(previousFormData);
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('popstate', handlePopState);
+
+    // Initialize history state for the current step if not already set
+    if (!window.history.state || window.history.state.step !== activeStep) {
+      updateBrowserHistory(activeStep);
+    }
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [activeStep, formData, navigate]);
 
   return (
     <Box sx={{ 
