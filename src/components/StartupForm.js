@@ -37,7 +37,6 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy } f
 import { analyzeStartupIdea } from '../services/openai';
 import { getCompetitorsWithGemini, getStartupInsightsWithGemini } from '../services/gemini';
 import useAuth from '../hooks/useAuth';
-import AnalysisDashboard from './AnalysisDashboard';
 import ReactMarkdown from 'react-markdown';
 
 const INDUSTRIES = [
@@ -49,8 +48,7 @@ const INDUSTRIES = [
 
 const STEPS = [
   'Startup Information',
-  'Generate Report',
-  'View Dashboard'
+  'Generate Report'
 ];
 
 const StartupForm = () => {
@@ -865,16 +863,12 @@ const StartupForm = () => {
           <Typography variant="h5" gutterBottom sx={{ color: '#e2e8f0' }}>
             Detailed Analysis & Projections
           </Typography>
-          <AnalysisDashboard analysisData={insights} />
         </Box>
 
         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
           <Button
+            onClick={handleBack}
             variant="outlined"
-            onClick={() => {
-              setActiveStep(0);
-              setInsights(null);
-            }}
             sx={{
               color: '#e2e8f0',
               borderColor: '#e2e8f0',
@@ -884,21 +878,7 @@ const StartupForm = () => {
               }
             }}
           >
-            Start New Analysis
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => {
-              console.log('Save/Export analysis');
-            }}
-            sx={{
-              bgcolor: '#6c5ce7',
-              '&:hover': {
-                bgcolor: '#5f50e1'
-              }
-            }}
-          >
-            Save Analysis
+            Back
           </Button>
         </Box>
       </Box>
@@ -993,37 +973,37 @@ const StartupForm = () => {
           Transform your idea into a viable business concept
         </Typography>
 
+        <Stepper 
+          activeStep={activeStep} 
+          alternativeLabel
+          sx={{ 
+            mb: 5,
+            '& .MuiStepLabel-root .Mui-completed': {
+              color: '#6c5ce7',
+            },
+            '& .MuiStepLabel-label.Mui-completed.MuiStepLabel-alternativeLabel': {
+              color: '#a0aec0',
+            },
+            '& .MuiStepLabel-root .Mui-active': {
+              color: '#6c5ce7',
+            },
+            '& .MuiStepLabel-label.Mui-active.MuiStepLabel-alternativeLabel': {
+              color: '#e2e8f0',
+            },
+            '& .MuiStepLabel-root .Mui-active .MuiStepIcon-text': {
+              fill: '#e2e8f0',
+            },
+          }}
+        >
+          {STEPS.map((label) => (
+            <Step key={label}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+
         {!insights ? (
           <>
-            <Stepper 
-              activeStep={activeStep} 
-              alternativeLabel
-              sx={{ 
-                mb: 5,
-                '& .MuiStepLabel-root .Mui-completed': {
-                  color: '#6c5ce7',
-                },
-                '& .MuiStepLabel-label.Mui-completed.MuiStepLabel-alternativeLabel': {
-                  color: '#a0aec0',
-                },
-                '& .MuiStepLabel-root .Mui-active': {
-                  color: '#6c5ce7',
-                },
-                '& .MuiStepLabel-label.Mui-active.MuiStepLabel-alternativeLabel': {
-                  color: '#e2e8f0',
-                },
-                '& .MuiStepLabel-root .Mui-active .MuiStepIcon-text': {
-                  fill: '#e2e8f0',
-                },
-              }}
-            >
-              {STEPS.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
-
             <Card sx={{ 
               backgroundColor: '#1e2430',
               borderRadius: 2,
@@ -1128,65 +1108,34 @@ const StartupForm = () => {
                   >
                     Back
                   </Button>
-                  <Button 
-                    variant="contained"
-                    onClick={() => setActiveStep(2)}
-                    sx={{
-                      bgcolor: '#6c5ce7',
-                      '&:hover': {
-                        bgcolor: '#5f50e1'
-                      }
-                    }}
-                  >
-                    View Dashboard
-                  </Button>
                 </Box>
               </Box>
             )}
             
             {activeStep === 2 && (
-              <AnalysisDashboard 
-                analysis={{
-                  overview: {
-                    growthRate: insights?.marketAnalysis?.growth_rate || '0',
-                    marketSize: insights?.demographics?.market_size || 'N/A',
-                    competitorCount: competitors?.length || '0'
-                  },
-                  marketAnalysis: {
-                    trendAnalysis: insights?.marketAnalysis?.summary || 'No analysis available'
-                  },
-                  financialProjections: {
-                    estimatedFunding: {
-                      initialFunding: insights?.fundingInsights?.initial_funding || 0
-                    },
-                    insights: insights?.fundingInsights?.summary || 'No funding insights available',
-                    projectionCharts: {
-                      financial: []
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="h4" color="#e2e8f0" gutterBottom>
+                  Analysis Complete
+                </Typography>
+                <Typography variant="body1" color="#a0aec0">
+                  Your startup analysis is now complete. You can go back to view the details.
+                </Typography>
+                <Button
+                  onClick={handleBack}
+                  variant="outlined"
+                  sx={{
+                    mt: 3,
+                    color: '#e2e8f0',
+                    borderColor: '#e2e8f0',
+                    '&:hover': {
+                      borderColor: '#5f50e1',
+                      backgroundColor: 'rgba(108, 92, 231, 0.1)'
                     }
-                  },
-                  competitorAnalysis: {
-                    insights: insights?.competitorInsights?.summary || 'No competitor insights available',
-                    competitorData: competitors || [],
-                    marketShare: competitors || [],
-                    radarData: []
-                  },
-                  marketTrends: {
-                    growthProjection: []
-                  },
-                  aiRecommendations: {
-                    growthStrategy: insights?.userGrowthInsights?.summary || 'No growth strategy available',
-                    riskMitigation: insights?.risksAndSolutions?.solutions || [],
-                    swot: insights?.swot || {
-                      strengths: [],
-                      weaknesses: [],
-                      opportunities: [],
-                      threats: []
-                    }
-                  }
-                }}
-                competitors={competitors}
-                insights={insights}
-              />
+                  }}
+                >
+                  Back to Analysis
+                </Button>
+              </Box>
             )}
           </Box>
         )}
