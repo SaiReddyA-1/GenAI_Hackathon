@@ -82,9 +82,12 @@ const MarketChartsDashboard = () => {
             <Button 
               color="inherit" 
               size="small" 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => {
+                localStorage.setItem('returnToStep', '1'); 
+                navigate('/dashboard');
+              }}
             >
-              Back to Dashboard
+              Back to Analysis
             </Button>
           }
         >
@@ -104,9 +107,12 @@ const MarketChartsDashboard = () => {
             <Button 
               color="inherit" 
               size="small" 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => {
+                localStorage.setItem('returnToStep', '1'); 
+                navigate('/dashboard');
+              }}
             >
-              Back to Dashboard
+              Back to Analysis
             </Button>
           }
         >
@@ -125,13 +131,19 @@ const MarketChartsDashboard = () => {
         mb: 3 
       }}>
         <h1 style={{ margin: 0, textAlign: 'center', width: '100%' }}>Market Analysis Dashboard</h1>
-        {/* <Button 
+      </Box>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 4 }}>
+        <Button 
           variant="contained" 
           color="primary" 
-          onClick={() => navigate('/dashboard')}
+          onClick={() => {
+            localStorage.setItem('returnToStep', '1'); 
+            navigate('/dashboard');
+          }}
         >
-          Back to Dashboard
-        </Button> */}
+          Back to Analysis
+        </Button>
       </Box>
       
       <Box sx={{ display: 'grid', gap: 4 }}>

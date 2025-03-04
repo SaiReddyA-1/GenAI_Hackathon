@@ -73,6 +73,34 @@ const StartupForm = () => {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const { user } = useAuth();
 
+  // Check for returnToStep in localStorage when component mounts
+  useEffect(() => {
+    const savedStep = localStorage.getItem('returnToStep');
+    if (savedStep) {
+      setActiveStep(parseInt(savedStep));
+      
+      // Also retrieve saved insights and formData if available
+      const savedInsights = localStorage.getItem('savedInsights');
+      const savedFormData = localStorage.getItem('savedFormData');
+      const savedCompetitors = localStorage.getItem('savedCompetitors');
+      
+      if (savedInsights) {
+        setInsights(JSON.parse(savedInsights));
+      }
+      
+      if (savedFormData) {
+        setFormData(JSON.parse(savedFormData));
+      }
+      
+      if (savedCompetitors) {
+        setCompetitors(JSON.parse(savedCompetitors));
+      }
+      
+      // Clear localStorage after using
+      localStorage.removeItem('returnToStep');
+    }
+  }, []);
+
   // Function to fetch analysis history from Firestore
   const fetchAnalysisHistory = async () => {
     if (!user) return;
@@ -894,7 +922,13 @@ const StartupForm = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate('/market-charts')}
+            onClick={() => {
+              // Save the current insights and formData in localStorage
+              localStorage.setItem('savedInsights', JSON.stringify(insights));
+              localStorage.setItem('savedFormData', JSON.stringify(formData));
+              localStorage.setItem('savedCompetitors', JSON.stringify(competitors));
+              navigate('/market-charts');
+            }}
             size="large"
             sx={{
               color: '#e2e8f0',
