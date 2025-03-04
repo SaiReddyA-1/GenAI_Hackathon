@@ -316,6 +316,14 @@ const StartupForm = () => {
   };
 
   const handleBack = () => {
+    // Reset insights when going back to form to ensure form questions are displayed
+    if (activeStep === 1) {
+      // Keep a copy of form data to ensure values are preserved
+      const formDataCopy = { ...formData };
+      setInsights(null);
+      // Restore form data after resetting insights
+      setFormData(formDataCopy);
+    }
     setActiveStep((prevStep) => prevStep - 1);
   };
 
