@@ -316,6 +316,12 @@ const StartupForm = () => {
   };
 
   const handleBack = () => {
+    // If on the first step, navigate to landing page
+    if (activeStep === 0) {
+      navigate('/');
+      return;
+    }
+    
     // Reset insights when going back to form to ensure form questions are displayed
     if (activeStep === 1) {
       // Keep a copy of form data to ensure values are preserved
@@ -1324,7 +1330,7 @@ const StartupForm = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
                   <Button
                     onClick={handleBack}
-                    disabled={activeStep === 0 || loadingStage !== ''}
+                    disabled={loadingStage !== ''}
                     sx={{
                       color: '#e2e8f0',
                       '&:hover': {
