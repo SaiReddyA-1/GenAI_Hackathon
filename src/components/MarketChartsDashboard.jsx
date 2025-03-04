@@ -122,7 +122,7 @@ const MarketChartsDashboard = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, mt: 2 }}>
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
