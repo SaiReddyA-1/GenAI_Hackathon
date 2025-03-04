@@ -92,13 +92,14 @@ const AnalysisDashboard = ({ analysis }) => {
     );
   }
 
+  // Initialize default values for any potentially undefined properties
   const {
-    overview,
-    marketAnalysis,
-    financialProjections,
-    aiRecommendations,
-    competitorAnalysis,
-    marketTrends,
+    overview = {},
+    marketAnalysis = {},
+    financialProjections = {},
+    aiRecommendations = {},
+    competitorAnalysis = {},
+    marketTrends = {},
   } = analysisData;
 
   console.log('AnalysisDashboard - Full analysis data:', analysisData);
@@ -151,7 +152,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 </Typography>
               </Box>
               <Typography variant="h4" component="p" sx={{ mb: 1, fontWeight: 700 }}>
-                +{overview.growthRate}%
+                +{(overview?.growthRate || '0')}%
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Year over year
@@ -183,7 +184,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 </Typography>
               </Box>
               <Typography variant="h4" component="p" sx={{ mb: 1, fontWeight: 700 }}>
-                {overview.marketSize}
+                {overview?.marketSize || 'N/A'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Market Size
@@ -215,7 +216,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 </Typography>
               </Box>
               <Typography variant="h4" component="p" sx={{ mb: 1, fontWeight: 700 }}>
-                {overview.competitorCount}
+                {overview?.competitorCount || 'N/A'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Direct competitors
@@ -247,7 +248,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 </Typography>
               </Box>
               <Typography variant="h4" component="p" sx={{ mb: 1, fontWeight: 700 }}>
-                {formatCurrency(financialProjections.estimatedFunding.initialFunding)}
+                {formatCurrency(financialProjections?.estimatedFunding?.initialFunding || 0)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Required funding
@@ -265,7 +266,7 @@ const AnalysisDashboard = ({ analysis }) => {
               <Grid container spacing={3}>
                 <Grid item xs={12} md={8}>
                   <Box sx={{ height: 300 }}>
-                    <MarketGrowthChart data={marketTrends} />
+                    <MarketGrowthChart data={marketTrends?.growthProjection || []} />
                   </Box>
                 </Grid>
                 <Grid item xs={12} md={4}>
@@ -274,7 +275,7 @@ const AnalysisDashboard = ({ analysis }) => {
                       Market Insights
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#4338ca' }}>
-                      {marketAnalysis.trendAnalysis}
+                      {marketAnalysis?.trendAnalysis || 'N/A'}
                     </Typography>
                   </Box>
                 </Grid>
@@ -289,12 +290,12 @@ const AnalysisDashboard = ({ analysis }) => {
               <Grid container spacing={3}>
                 <Grid item xs={12} md={4}>
                   <Box sx={{ height: 300 }}>
-                    <MarketShareChart data={competitorAnalysis} />
+                    <MarketShareChart data={competitorAnalysis?.marketShare || []} />
                   </Box>
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <Box sx={{ height: 300 }}>
-                    <CompetitorChart data={competitorAnalysis} />
+                    <CompetitorChart data={competitorAnalysis?.competitorData || []} />
                   </Box>
                 </Grid>
                 <Grid item xs={12} md={4}>
@@ -303,7 +304,7 @@ const AnalysisDashboard = ({ analysis }) => {
                       Competition Analysis
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#166534' }}>
-                      {competitorAnalysis.insights}
+                      {competitorAnalysis?.insights || 'N/A'}
                     </Typography>
                   </Box>
                 </Grid>
@@ -319,7 +320,7 @@ const AnalysisDashboard = ({ analysis }) => {
                 <Grid item xs={12} md={8}>
                   <Box sx={{ height: 300 }}>
                     <ResponsiveContainer>
-                      <BarChart data={financialProjections.projectionCharts.financial}>
+                      <BarChart data={financialProjections?.projectionCharts?.financial || []}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="month" />
                         <YAxis />
@@ -338,7 +339,7 @@ const AnalysisDashboard = ({ analysis }) => {
                       Financial Insights
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#92400e' }}>
-                      {financialProjections.insights}
+                      {financialProjections?.insights || 'N/A'}
                     </Typography>
                   </Box>
                 </Grid>
@@ -357,7 +358,7 @@ const AnalysisDashboard = ({ analysis }) => {
                   Market Opportunity
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#4338ca' }}>
-                  {marketAnalysis.trendAnalysis}
+                  {marketAnalysis?.trendAnalysis || 'N/A'}
                 </Typography>
               </Box>
             </Grid>
@@ -367,7 +368,7 @@ const AnalysisDashboard = ({ analysis }) => {
                   Growth Strategy
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#166534' }}>
-                  {aiRecommendations.growthStrategy}
+                  {aiRecommendations?.growthStrategy || 'N/A'}
                 </Typography>
               </Box>
             </Grid>
@@ -377,12 +378,140 @@ const AnalysisDashboard = ({ analysis }) => {
                   Risk Mitigation
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#92400e' }}>
-                  {aiRecommendations.riskMitigation.join(', ')}
+                  {(aiRecommendations?.riskMitigation || []).join(', ') || 'N/A'}
                 </Typography>
               </Box>
             </Grid>
           </Grid>
         </Box>
+
+        {/* Charts */}
+        <Grid container spacing={4} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={6}>
+            <Paper
+              sx={{
+                p: 3,
+                height: '100%',
+                minHeight: 400,
+                borderRadius: 2,
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+              }}
+            >
+              <Typography variant="h6" component="h3" sx={{ mb: 3, fontWeight: 600 }}>
+                Projected Market Growth
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart
+                  data={marketTrends?.growthProjection || []}
+                  margin={{
+                    top: 10,
+                    right: 30,
+                    left: 0,
+                    bottom: 0,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="year" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="projectedGrowth" stroke="#10b981" activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey="industryAverage" stroke="#6366f1" />
+                </LineChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Paper
+              sx={{
+                p: 3,
+                height: '100%',
+                minHeight: 400,
+                borderRadius: 2,
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+              }}
+            >
+              <Typography variant="h6" component="h3" sx={{ mb: 3, fontWeight: 600 }}>
+                Competitive Landscape
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={competitorAnalysis?.radarData || []}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                  <Radar name="Your Startup" dataKey="A" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
+                  <Radar name="Competitors Avg" dataKey="B" stroke="#6366f1" fill="#6366f1" fillOpacity={0.6} />
+                  <Legend />
+                </RadarChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Detailed Analysis */}
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Paper
+              sx={{
+                p: 3,
+                borderRadius: 2,
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                mb: 4,
+              }}
+            >
+              <Typography variant="h6" component="h3" sx={{ mb: 3, fontWeight: 600 }}>
+                SWOT Analysis
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#059669' }}>
+                      Strengths
+                    </Typography>
+                    <ul style={{ paddingLeft: '1.25rem', margin: '0.5rem 0' }}>
+                      {(aiRecommendations?.swot?.strengths || []).map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#CA8A04' }}>
+                      Opportunities
+                    </Typography>
+                    <ul style={{ paddingLeft: '1.25rem', margin: '0.5rem 0' }}>
+                      {(aiRecommendations?.swot?.opportunities || []).map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#DC2626' }}>
+                      Weaknesses
+                    </Typography>
+                    <ul style={{ paddingLeft: '1.25rem', margin: '0.5rem 0' }}>
+                      {(aiRecommendations?.swot?.weaknesses || []).map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#7C3AED' }}>
+                      Threats
+                    </Typography>
+                    <ul style={{ paddingLeft: '1.25rem', margin: '0.5rem 0' }}>
+                      {(aiRecommendations?.swot?.threats || []).map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
       </Box>
     </>
   );

@@ -9,16 +9,6 @@ const formatStartupDataForPrompt = (formData) => {
     Startup Idea: ${formData.startupIdea}
     Industry: ${formData.industry}
     Problem & Solution: ${formData.problemSolution}
-    Target Users: ${formData.targetUsers}
-    Operation Location: ${formData.operationLocation}
-    Competitors: ${formData.competitors}
-    Initial Investment: $${formData.initialInvestment}
-    Business Model: ${formData.businessModel}
-    Revenue per User: $${formData.revenuePerUser}
-    Break-even Time: ${formData.breakEvenTime}
-    Market Size: ${formData.marketSize}
-    User Growth Rate: ${formData.userGrowthRate}%
-    Supporting Trends: ${formData.supportingTrends?.join(', ')}
   `;
 };
 
@@ -32,23 +22,23 @@ const generatePrompt = (formData) => {
     Generate a comprehensive analysis that includes:
     
     1. Market Growth:
-    - Project realistic year-over-year growth rates based on the industry (${formData.industry}) and market size (${formData.marketSize})
-    - Consider market trends: ${formData.supportingTrends?.join(', ')}
-    - Account for the target market and location: ${formData.targetUsers} in ${formData.operationLocation}
+    - Project realistic year-over-year growth rates based on the industry (${formData.industry})
+    - Consider potential market trends related to this industry
+    - Analyze the target market for this solution
     
     2. Competitor Analysis:
-    - Analyze the competitive landscape: ${formData.competitors}
+    - Analyze the competitive landscape for this type of startup
     - Estimate realistic market share distribution
     - Consider the startup's unique value proposition
     
     3. Funding Requirements:
-    - Initial investment needed: $${formData.initialInvestment}
-    - Project future funding needs based on the business model: ${formData.businessModel}
-    - Consider break-even timeline: ${formData.breakEvenTime}
+    - Estimate initial investment needed based on industry standards
+    - Project future funding needs based on typical business models for this industry
+    - Consider break-even timeline for this type of startup
     
     4. User Growth:
-    - Base growth on provided rate: ${formData.userGrowthRate}%
-    - Consider acquisition strategy: ${formData.userAcquisition}
+    - Estimate reasonable growth rate based on industry benchmarks
+    - Consider typical user acquisition strategies for this type of business
     - Factor in market size and penetration potential
     
     Format the response as a JSON object with this structure:
@@ -58,7 +48,7 @@ const generatePrompt = (formData) => {
         "values": [realistic growth percentages]
       },
       "competitorComparison": {
-        "competitors": [actual competitor names],
+        "competitors": [realistic competitor names],
         "marketShare": [realistic market share percentages]
       },
       "fundingPrediction": {
@@ -73,16 +63,16 @@ const generatePrompt = (formData) => {
         "summary": "Detailed market analysis specific to ${formData.industry} and ${formData.startupIdea}"
       },
       "competitorInsights": {
-        "summary": "Specific insights about competition with ${formData.competitors}"
+        "summary": "Specific insights about competition in this industry"
       },
       "fundingInsights": {
-        "summary": "Funding strategy based on ${formData.businessModel} and ${formData.initialInvestment}"
+        "summary": "Funding strategy based on industry standards"
       },
       "userGrowthInsights": {
-        "summary": "Growth strategy focusing on ${formData.targetUsers} through ${formData.userAcquisition}"
+        "summary": "Growth strategy focusing on potential users"
       }
     }
-
+    
     Make the analysis realistic and specific to this startup idea. Avoid generic responses.
     Consider industry-specific challenges and opportunities.
     Base projections on real-world market conditions and industry benchmarks.
@@ -94,17 +84,35 @@ export const getCompetitorsWithGemini = async (formData) => {
   try {
     console.log('Fetching detailed competitor information with Gemini API...');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-    const prompt = `Identify the top three competitors for the startup idea: ${formData.startupIdea}. For each competitor, provide the following details in a simple format:
+    const prompt = `Identify the top three competitors for the following startup idea:
+
+Startup Idea: ${formData.startupIdea}
+Industry: ${formData.industry}
+
+For each competitor, provide the following details in a simple format:
 
 Competitor 1:
-Name: [name]
-Market Share: [percentage - just the number]
+Name: [name of a real company in this space]
+Market Share: [realistic percentage between 5-40%]
 Target Audience: [audience]
 Marketing Strategies: [strategies]
 
-(Repeat for competitors 2 and 3)
+Competitor 2:
+Name: [name of a real company in this space]
+Market Share: [realistic percentage between 5-30%]
+Target Audience: [audience]
+Marketing Strategies: [strategies]
 
-Important: For Market Share, only provide the number without any symbols or text (e.g., "30" not "30%" or "~30%")`;
+Competitor 3:
+Name: [name of a real company in this space]
+Market Share: [realistic percentage between 5-20%]
+Target Audience: [audience]
+Marketing Strategies: [strategies]
+
+Important: 
+1. For Market Share, provide realistic estimates based on actual market research when possible
+2. The three competitors should NOT add up to 100% as there are many smaller players in the market
+3. Only provide the number without any symbols or text (e.g., "30" not "30%" or "~30%")`;
 
     console.log('Generated detailed competitors prompt:', prompt);
 
@@ -150,6 +158,28 @@ Important: For Market Share, only provide the number without any symbols or text
         }
       }
     }
+
+    // Normalize market share values to ensure total is 100%
+    const totalMarketShare = competitors.reduce((acc, competitor) => acc + competitor.marketShare, 0);
+    
+    // If total exceeds 100 or is very close to it, normalize to 100
+    // Otherwise, leave room for "Others" category
+    if (totalMarketShare > 90) {
+      competitors.forEach(competitor => {
+        competitor.marketShare = (competitor.marketShare / totalMarketShare) * 100;
+      });
+    }
+    
+    // Ensure we have reasonable values
+    competitors.forEach(competitor => {
+      // Cap extremely high values
+      if (competitor.marketShare > 60) {
+        competitor.marketShare = Math.min(60, competitor.marketShare);
+      }
+      
+      // Round to one decimal place for cleaner display
+      competitor.marketShare = parseFloat(competitor.marketShare.toFixed(1));
+    });
 
     console.log('Parsed competitor details:', competitors);
     return competitors;
@@ -230,7 +260,7 @@ Analyze the following startup idea and generate a detailed SWOT analysis. Focus 
 
 Startup Idea: ${formData.startupIdea}
 Industry: ${formData.industry}
-Target Market: ${formData.targetUsers || 'Not specified'}
+Problem & Solution: ${formData.problemSolution}
 
 Format your response EXACTLY as follows, with each point being specific and actionable:
 
@@ -381,12 +411,12 @@ export const getStartupInsightsWithGemini = async (formData) => {
     const swotText = swotResponse.text();
     const swotData = parseSwotData(swotText);
 
-    // Get demographic data (using existing demographic prompt)
+    // Get demographic data (using simplified demographic prompt)
     const demographicPrompt = `Analyze the following startup idea and provide detailed demographic insights:
     
     Startup Idea: ${formData.startupIdea}
     Industry: ${formData.industry}
-    Target Market: ${formData.targetUsers || 'Not specified'}
+    Problem & Solution: ${formData.problemSolution}
 
     Please provide demographic insights in this exact format (use numbers only, no symbols):
 
@@ -520,24 +550,6 @@ export const getStartupInsightsWithGemini = async (formData) => {
   } catch (error) {
     console.error('Gemini API Error:', error);
     return null;
-  }
-};
-
-export const getLiveInsightWithGemini = async (prompt) => {
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-    
-    // Modify the prompt to request markdown format and concise response
-    const enhancedPrompt = `${prompt}\n\nProvide a concise response in markdown format with bullet points and sub-points. Focus on 2-3 main categories with 2-3 specific actionable points under each. Keep the total response under 300 words.`;
-    
-    const result = await model.generateContent(enhancedPrompt);
-    const response = await result.response;
-    const text = response.text();
-    
-    return text; // Return the markdown text directly
-  } catch (error) {
-    console.error('Error in getLiveInsightWithGemini:', error);
-    throw error;
   }
 };
 

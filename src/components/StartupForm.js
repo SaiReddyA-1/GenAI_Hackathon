@@ -29,146 +29,37 @@ import {
 import { db } from '../config/firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { analyzeStartupIdea } from '../services/openai';
-import { getCompetitorsWithGemini, getStartupInsightsWithGemini, getLiveInsightWithGemini } from '../services/gemini';
+import { getCompetitorsWithGemini, getStartupInsightsWithGemini } from '../services/gemini';
 import useAuth from '../hooks/useAuth';
 import AnalysisDashboard from './AnalysisDashboard';
 import ReactMarkdown from 'react-markdown';
 
 const INDUSTRIES = [
-  'AI',
-  'E-commerce',
-  'FinTech',
-  'Healthcare',
-  'EdTech',
-  'Other'
+  'Technology', 'Healthcare', 'Finance', 'E-commerce', 'Education', 
+  'Entertainment', 'Food & Beverage', 'Real Estate', 'Transportation',
+  'Energy', 'Manufacturing', 'Retail', 'Consulting', 'Agriculture',
+  'Hospitality', 'Media', 'Fashion', 'Fitness', 'Travel'
 ];
-
-const TARGET_USERS = [
-  'Businesses',
-  'Consumers',
-  'Enterprises',
-  'Students',
-  'Other'
-];
-
-const BUSINESS_MODELS = [
-  'Subscription',
-  'Freemium',
-  'Ads',
-  'One-time Purchase',
-  'Other'
-];
-
-const USER_ACQUISITION = [
-  'Ads',
-  'Partnerships',
-  'Social Media',
-  'SEO',
-  'Cold Outreach',
-  'Other'
-];
-
-const MARKET_SIZES = [
-  'Small',
-  'Medium',
-  'Large',
-  'Global'
-];
-
-const BREAKEVEN_TIMES = [
-  '3 months',
-  '6 months',
-  '1 year',
-  '2 years',
-  'More than 2 years'
-];
-
-const MARKET_TRENDS = [
-  'AI Boom',
-  'Remote Work',
-  'Sustainability',
-  'Digital Payments',
-  'Cloud Computing',
-  'Other'
-];
-
-const SAMPLE_DATA = {
-  startupIdea: "AI-powered health monitoring wearable that predicts potential health issues before they become serious. The device uses advanced machine learning to analyze real-time health data and provides early warnings for various medical conditions.",
-  industry: 'Healthcare',
-  problemSolution: "Traditional health monitoring is reactive rather than proactive. Our solution uses AI to predict health issues days or weeks before symptoms appear, potentially saving lives through early intervention.",
-  operationLocation: 'Global, starting with US and Europe',
-  targetUsers: 'Consumers',
-  hasCompetitors: 'yes',
-  competitors: 'Apple Health, Fitbit, Samsung Health',
-  userAcquisition: 'Partnerships',
-  needFunding: 'yes',
-  initialInvestment: '5000000',
-  businessModel: 'Subscription',
-  revenuePerUser: '29.99',
-  breakEvenTime: '2 years',
-  marketSize: 'Large',
-  userGrowthRate: '45',
-  supportingTrends: ['AI Boom', 'Digital Payments'],
-  needAiStrategies: 'yes',
-  needBenchmarking: 'yes',
-  needPdfReport: 'yes'
-};
 
 const STEPS = [
-  'Basic Info',
-  'Market & Competition',
-  'Financial & Growth',
-  'AI & Reports',
-  'Competitors'
-];
-
-const IMPROVEMENT_QUESTIONS = [
-  {
-    id: 'market_trends',
-    question: 'What are the latest market trends that could impact my startup?',
-    prompt: (idea) => `Analyze the latest market trends for this startup idea: ${idea}. 
-    Format your response in markdown with 2-3 main categories and specific points under each.
-    Include market statistics and growth indicators where relevant.
-    Focus on current trends and near-future predictions that could directly impact this business.`
-  },
-  {
-    id: 'user_acquisition',
-    question: 'How can I improve my user acquisition strategy?',
-    prompt: (idea) => `Suggest innovative user acquisition strategies for this startup: ${idea}.
-    Format your response in markdown with 2-3 main categories (e.g., Digital Marketing, Partnerships, Growth Hacking).
-    Under each category, provide 2-3 specific, actionable tactics.
-    Include real-world examples or potential metrics where relevant.`
-  },
-  {
-    id: 'revenue_optimization',
-    question: 'What are potential ways to optimize revenue streams?',
-    prompt: (idea) => `Recommend ways to optimize and diversify revenue streams for this startup idea: ${idea}.
-    Format your response in markdown with 2-3 main revenue categories.
-    For each category, provide 2-3 specific monetization strategies or pricing models.
-    Include potential revenue projections or industry benchmarks where relevant.`
-  },
-  {
-    id: 'competitive_advantage',
-    question: 'How can I strengthen my competitive advantage?',
-    prompt: (idea) => `Analyze how to build and maintain a strong competitive advantage for this startup: ${idea}.
-    Format your response in markdown with 2-3 main strategic areas.
-    For each area, provide 2-3 specific differentiators or unique value propositions.
-    Include examples of successful implementations in similar industries.`
-  }
+  'Startup Information',
+  'Generate Report',
+  'View Dashboard'
 ];
 
 const StartupForm = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    startupIdea: '',
+    problemSolution: '',
+    industry: ''
+  });
   const [errors, setErrors] = useState({});
   const [loadingStage, setLoadingStage] = useState('');
   const [error, setError] = useState('');
-  const [analysis, setAnalysis] = useState(null);
   const [competitors, setCompetitors] = useState([]); 
   const [insights, setInsights] = useState(null);
-  const [liveInsights, setLiveInsights] = useState({});
-  const [loadingQuestion, setLoadingQuestion] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -213,12 +104,12 @@ const StartupForm = () => {
         <TextField
           fullWidth
           label="What's your innovative idea?"
-          multiline
-          rows={4}
           value={formData.startupIdea || ''}
           onChange={(e) => handleFormChange('startupIdea', e.target.value)}
           error={!!errors.startupIdea}
           helperText={errors.startupIdea}
+          multiline
+          rows={3}
           variant="outlined"
           sx={{
             '& .MuiInputLabel-root': {
@@ -256,12 +147,12 @@ const StartupForm = () => {
         <TextField
           fullWidth
           label="What problem does it solve?"
-          multiline
-          rows={4}
           value={formData.problemSolution || ''}
           onChange={(e) => handleFormChange('problemSolution', e.target.value)}
           error={!!errors.problemSolution}
           helperText={errors.problemSolution}
+          multiline
+          rows={3}
           variant="outlined"
           sx={{
             '& .MuiInputLabel-root': {
@@ -307,6 +198,7 @@ const StartupForm = () => {
             value={formData.industry || ''}
             onChange={(e) => handleFormChange('industry', e.target.value)}
             label="Industry"
+            error={!!errors.industry}
             sx={{
               backgroundColor: '#1e2430',
               color: '#4a5568',
@@ -331,507 +223,9 @@ const StartupForm = () => {
               <MenuItem key={industry} value={industry}>{industry}</MenuItem>
             ))}
           </Select>
-          {errors.industry && <FormHelperText error>{errors.industry}</FormHelperText>}
-        </FormControl>
-      </Grid>
-    </Grid>
-  );
-
-  const renderMarketCompetition = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          label="Operation Location"
-          value={formData.operationLocation || ''}
-          onChange={(e) => handleFormChange('operationLocation', e.target.value)}
-          variant="outlined"
-          sx={{
-            '& .MuiInputLabel-root': {
-              color: '#718096',
-              '&.Mui-focused': {
-                color: '#6c5ce7'
-              }
-            },
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#1e2430',
-              '& input, & textarea': {
-                color: '#4a5568',
-                '&::placeholder': {
-                  color: '#4a5568',
-                  opacity: 0.7
-                }
-              },
-              '& fieldset': {
-                borderColor: 'transparent'
-              },
-              '&:hover fieldset': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#6c5ce7'
-              }
-            },
-            '& .MuiFormHelperText-root': {
-              color: '#718096'
-            }
-          }}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <FormControl fullWidth>
-          <InputLabel sx={{ 
-            color: '#718096',
-            '&.Mui-focused': {
-              color: '#6c5ce7'
-            }
-          }}>Target Users</InputLabel>
-          <Select
-            value={formData.targetUsers || ''}
-            onChange={(e) => handleFormChange('targetUsers', e.target.value)}
-            label="Target Users"
-            sx={{
-              backgroundColor: '#1e2430',
-              color: '#4a5568',
-              '& .MuiSelect-select': {
-                color: '#4a5568'
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'transparent'
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '& .MuiSelect-icon': {
-                color: '#4a5568'
-              }
-            }}
-          >
-            {TARGET_USERS.map((user) => (
-              <MenuItem key={user} value={user}>{user}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={formData.hasCompetitors === 'yes'}
-              onChange={(e) => handleFormChange('hasCompetitors', e.target.checked ? 'yes' : 'no')}
-              sx={{
-                '& .MuiSwitch-switchBase': {
-                  color: '#718096'
-                }
-              }}
-            />
-          }
-          label="Do you have competitors?"
-          sx={{
-            '& .MuiTypography-root': {
-              color: '#718096'
-            }
-          }}
-        />
-      </Grid>
-      {formData.hasCompetitors === 'yes' && (
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Main Competitors"
-            multiline
-            rows={2}
-            value={formData.competitors || ''}
-            onChange={(e) => handleFormChange('competitors', e.target.value)}
-            helperText="Separate competitors with commas"
-            variant="outlined"
-            sx={{
-              '& .MuiInputLabel-root': {
-                color: '#718096',
-                '&.Mui-focused': {
-                  color: '#6c5ce7'
-                }
-              },
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: '#1e2430',
-                '& input, & textarea': {
-                  color: '#4a5568',
-                  '&::placeholder': {
-                    color: '#4a5568',
-                    opacity: 0.7
-                  }
-                },
-                '& fieldset': {
-                  borderColor: 'transparent'
-                },
-                '&:hover fieldset': {
-                  borderColor: '#6c5ce7'
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#6c5ce7'
-                }
-              },
-              '& .MuiFormHelperText-root': {
-                color: '#718096'
-              }
-            }}
-          />
-        </Grid>
-      )}
-      <Grid item xs={12}>
-        <FormControl fullWidth>
-          <InputLabel sx={{ 
-            color: '#718096',
-            '&.Mui-focused': {
-              color: '#6c5ce7'
-            }
-          }}>User Acquisition Strategy</InputLabel>
-          <Select
-            value={formData.userAcquisition || ''}
-            onChange={(e) => handleFormChange('userAcquisition', e.target.value)}
-            label="User Acquisition Strategy"
-            sx={{
-              backgroundColor: '#1e2430',
-              color: '#4a5568',
-              '& .MuiSelect-select': {
-                color: '#4a5568'
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'transparent'
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '& .MuiSelect-icon': {
-                color: '#4a5568'
-              }
-            }}
-          >
-            {USER_ACQUISITION.map((strategy) => (
-              <MenuItem key={strategy} value={strategy}>{strategy}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-    </Grid>
-  );
-
-  const renderFinancialGrowth = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={formData.needFunding === 'yes'}
-              onChange={(e) => handleFormChange('needFunding', e.target.checked ? 'yes' : 'no')}
-              sx={{
-                '& .MuiSwitch-switchBase': {
-                  color: '#718096'
-                }
-              }}
-            />
-          }
-          label="Do you need funding?"
-          sx={{
-            '& .MuiTypography-root': {
-              color: '#718096'
-            }
-          }}
-        />
-      </Grid>
-      {formData.needFunding === 'yes' && (
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            type="number"
-            label="Initial Investment Needed ($)"
-            value={formData.initialInvestment || ''}
-            onChange={(e) => handleFormChange('initialInvestment', e.target.value)}
-            InputProps={{
-              startAdornment: <InputAdornment position="start">$</InputAdornment>,
-            }}
-            variant="outlined"
-            sx={{
-              '& .MuiInputLabel-root': {
-                color: '#718096',
-                '&.Mui-focused': {
-                  color: '#6c5ce7'
-                }
-              },
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: '#1e2430',
-                '& input, & textarea': {
-                  color: '#4a5568',
-                  '&::placeholder': {
-                    color: '#4a5568',
-                    opacity: 0.7
-                  }
-                },
-                '& fieldset': {
-                  borderColor: 'transparent'
-                },
-                '&:hover fieldset': {
-                  borderColor: '#6c5ce7'
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#6c5ce7'
-                }
-              },
-              '& .MuiFormHelperText-root': {
-                color: '#718096'
-              }
-            }}
-          />
-        </Grid>
-      )}
-      <Grid item xs={12}>
-        <FormControl fullWidth>
-          <InputLabel sx={{ 
-            color: '#718096',
-            '&.Mui-focused': {
-              color: '#6c5ce7'
-            }
-          }}>Business Model</InputLabel>
-          <Select
-            value={formData.businessModel || ''}
-            onChange={(e) => handleFormChange('businessModel', e.target.value)}
-            label="Business Model"
-            sx={{
-              backgroundColor: '#1e2430',
-              color: '#4a5568',
-              '& .MuiSelect-select': {
-                color: '#4a5568'
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'transparent'
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '& .MuiSelect-icon': {
-                color: '#4a5568'
-              }
-            }}
-          >
-            {BUSINESS_MODELS.map((model) => (
-              <MenuItem key={model} value={model}>{model}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          type="number"
-          label="Revenue per User ($)"
-          value={formData.revenuePerUser || ''}
-          onChange={(e) => handleFormChange('revenuePerUser', e.target.value)}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">$</InputAdornment>,
-          }}
-          variant="outlined"
-          sx={{
-            '& .MuiInputLabel-root': {
-              color: '#718096',
-              '&.Mui-focused': {
-                color: '#6c5ce7'
-              }
-            },
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#1e2430',
-              '& input, & textarea': {
-                color: '#4a5568',
-                '&::placeholder': {
-                  color: '#4a5568',
-                  opacity: 0.7
-                }
-              },
-              '& fieldset': {
-                borderColor: 'transparent'
-              },
-              '&:hover fieldset': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#6c5ce7'
-              }
-            },
-            '& .MuiFormHelperText-root': {
-              color: '#718096'
-            }
-          }}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <FormControl fullWidth>
-          <InputLabel sx={{ 
-            color: '#718096',
-            '&.Mui-focused': {
-              color: '#6c5ce7'
-            }
-          }}>Break-even Time</InputLabel>
-          <Select
-            value={formData.breakEvenTime || ''}
-            onChange={(e) => handleFormChange('breakEvenTime', e.target.value)}
-            label="Break-even Time"
-            sx={{
-              backgroundColor: '#1e2430',
-              color: '#4a5568',
-              '& .MuiSelect-select': {
-                color: '#4a5568'
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'transparent'
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '& .MuiSelect-icon': {
-                color: '#4a5568'
-              }
-            }}
-          >
-            {BREAKEVEN_TIMES.map((time) => (
-              <MenuItem key={time} value={time}>{time}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-    </Grid>
-  );
-
-  const renderAiReports = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <FormControl fullWidth>
-          <InputLabel sx={{ 
-            color: '#718096',
-            '&.Mui-focused': {
-              color: '#6c5ce7'
-            }
-          }}>Market Size</InputLabel>
-          <Select
-            value={formData.marketSize || ''}
-            onChange={(e) => handleFormChange('marketSize', e.target.value)}
-            label="Market Size"
-            sx={{
-              backgroundColor: '#1e2430',
-              color: '#4a5568',
-              '& .MuiSelect-select': {
-                color: '#4a5568'
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'transparent'
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '& .MuiSelect-icon': {
-                color: '#4a5568'
-              }
-            }}
-          >
-            {MARKET_SIZES.map((size) => (
-              <MenuItem key={size} value={size}>{size}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          type="number"
-          label="Expected User Growth Rate (%)"
-          value={formData.userGrowthRate || ''}
-          onChange={(e) => handleFormChange('userGrowthRate', e.target.value)}
-          InputProps={{
-            endAdornment: <InputAdornment position="end">%</InputAdornment>,
-          }}
-          variant="outlined"
-          sx={{
-            '& .MuiInputLabel-root': {
-              color: '#718096',
-              '&.Mui-focused': {
-                color: '#6c5ce7'
-              }
-            },
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#1e2430',
-              '& input, & textarea': {
-                color: '#4a5568',
-                '&::placeholder': {
-                  color: '#4a5568',
-                  opacity: 0.7
-                }
-              },
-              '& fieldset': {
-                borderColor: 'transparent'
-              },
-              '&:hover fieldset': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#6c5ce7'
-              }
-            },
-            '& .MuiFormHelperText-root': {
-              color: '#718096'
-            }
-          }}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <FormControl fullWidth>
-          <InputLabel sx={{ 
-            color: '#718096',
-            '&.Mui-focused': {
-              color: '#6c5ce7'
-            }
-          }}>Supporting Market Trends</InputLabel>
-          <Select
-            multiple
-            value={formData.supportingTrends || []}
-            onChange={(e) => handleFormChange('supportingTrends', e.target.value)}
-            label="Supporting Market Trends"
-            sx={{
-              backgroundColor: '#1e2430',
-              color: '#4a5568',
-              '& .MuiSelect-select': {
-                color: '#4a5568'
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'transparent'
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#6c5ce7'
-              },
-              '& .MuiSelect-icon': {
-                color: '#4a5568'
-              }
-            }}
-          >
-            {MARKET_TRENDS.map((trend) => (
-              <MenuItem key={trend} value={trend}>{trend}</MenuItem>
-            ))}
-          </Select>
+          {errors.industry && (
+            <FormHelperText error>{errors.industry}</FormHelperText>
+          )}
         </FormControl>
       </Grid>
     </Grid>
@@ -841,12 +235,6 @@ const StartupForm = () => {
     switch (step) {
       case 0:
         return renderBasicInfo();
-      case 1:
-        return renderMarketCompetition();
-      case 2:
-        return renderFinancialGrowth();
-      case 3:
-        return renderAiReports();
       default:
         return null;
     }
@@ -899,304 +287,140 @@ const StartupForm = () => {
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (!formData.startupIdea?.trim()) {
+      newErrors.startupIdea = 'Please enter your startup idea';
+      isValid = false;
+    }
+
+    if (!formData.problemSolution?.trim()) {
+      newErrors.problemSolution = 'Please explain what problem your idea solves';
+      isValid = false;
+    }
+
+    if (!formData.industry?.trim()) {
+      newErrors.industry = 'Please select an industry';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    // Start loading sequence for competitor analysis
+    setLoadingStage('Analyzing Startup Idea...');
+    setError('');
+
     try {
-      setLoadingStage('Fetching competitors...');
-      const competitorsList = await getCompetitorsWithGemini(formData);
-      
-      if (!competitorsList || competitorsList.length === 0) {
-        throw new Error('Failed to fetch competitors');
-      }
+      // Get competitors using Gemini
+      const competitorData = await getCompetitorsWithGemini(formData);
+      setCompetitors(competitorData);
 
-      setCompetitors(competitorsList);
-      
-      setLoadingStage('Generating insights...');
-      const insightsList = await getStartupInsightsWithGemini(formData);
-      
-      if (!insightsList) {
-        throw new Error('Failed to generate insights');
-      }
+      // Get startup insights using Gemini
+      setLoadingStage('Generating Market Analysis...');
+      const insightsData = await getStartupInsightsWithGemini(formData);
+      setInsights(insightsData);
 
-      setInsights(insightsList);
-
-      // Transform market data for charts
-      const marketData = {
-        demographics: insightsList.demographics,
-        marketSize: [
-          { year: '2020', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 0.6 },
-          { year: '2021', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 0.8 },
-          { year: '2022', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 0.9 },
-          { year: '2023', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) },
-          { year: '2024', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 1.2 },
-          { year: '2025', value: parseFloat(insightsList.marketAnalysis?.current_growth_rate || 0) * 1.4 }
-        ],
-        competitors: competitorsList.map(comp => ({
-          name: comp.name,
-          marketShare: comp.marketShare || 0,
-          targetMarket: comp.targetAudience,
-          strategies: comp.marketingStrategies
-        })),
-        swot: insightsList.swot // Add SWOT data here
-      };
-
-      setLoadingStage('Saving analysis...');
-      
-      // Save to Firebase first
-      const analysisId = await saveToFirebase(marketData);
-      
-      // Store the analysis ID along with the market data
-      const dataToStore = {
-        ...marketData,
-        analysisId
-      };
-      
-      // Store in localStorage for immediate use
-      localStorage.setItem('marketAnalysisData', JSON.stringify(dataToStore));
-
+      // Proceed to showing results
       setLoadingStage('');
-      setActiveStep(activeStep + 1);
-      
-    } catch (err) {
-      console.error('Analysis error:', err);
-      setError(err.message || 'Failed to analyze startup idea. Please try again.');
-      setLoadingStage('');
-    }
-  };
+      setActiveStep(1);
 
-  const handleQuestionClick = async (questionId) => {
-    try {
-      setLoadingQuestion(questionId);
-      const question = IMPROVEMENT_QUESTIONS.find(q => q.id === questionId);
-      const prompt = question.prompt(formData.startupIdea);
-      
-      const response = await getLiveInsightWithGemini(prompt);
-      
-      setLiveInsights(prev => ({
-        ...prev,
-        [questionId]: response
-      }));
+      // Save analysis to Firebase
+      if (user) {
+        try {
+          const savedId = await saveToFirebase({
+            ...formData,
+            competitors: competitorData,
+            ...insightsData
+          });
+          
+          console.log('Analysis saved with ID:', savedId);
+          
+          // Store the reference in localStorage for the dashboard charts
+          localStorage.setItem('marketAnalysisData', JSON.stringify({
+            ...insightsData,
+            analysisId: savedId
+          }));
+        } catch (err) {
+          console.error('Error saving to Firebase:', err);
+        }
+      }
     } catch (error) {
-      console.error('Error getting insights:', error);
-      setError('Failed to get insights. Please try again.');
-    } finally {
-      setLoadingQuestion('');
+      console.error('Analysis error:', error);
+      setError('Failed to complete analysis. Please try again.');
+      setLoadingStage('');
     }
-  };
-
-  const renderLiveInsightsSection = () => {
-    if (!insights) return null;
-
-    return (
-      <Box sx={{ mt: 8 }}>
-        <Typography variant="h5" align="center" gutterBottom sx={{ color: 'white', mb: 3 }}>
-          Get Live Insights to Improve Your Startup
-        </Typography>
-        <Grid container spacing={3}>
-          {IMPROVEMENT_QUESTIONS.map((q) => (
-            <Grid item xs={12} key={q.id}>
-              <Card sx={{ 
-                backgroundColor: '#1e2430',
-                borderRadius: 2,
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" sx={{ color: 'white' }}>
-                      {q.question}
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      onClick={() => handleQuestionClick(q.id)}
-                      disabled={loadingQuestion === q.id}
-                      sx={{
-                        backgroundColor: '#6c5ce7',
-                        '&:hover': {
-                          backgroundColor: '#5f50e1'
-                        }
-                      }}
-                    >
-                      {loadingQuestion === q.id ? (
-                        <CircularProgress size={24} sx={{ color: 'white' }} />
-                      ) : (
-                        'Get Insights'
-                      )}
-                    </Button>
-                  </Box>
-                  
-                  {liveInsights[q.id] && (
-                    <Box sx={{ 
-                      mt: 2, 
-                      p: 2, 
-                      backgroundColor: '#242936', 
-                      borderRadius: 1,
-                      '& h1, & h2, & h3, & h4, & h5, & h6': {
-                        color: 'white',
-                        marginTop: 2,
-                        marginBottom: 1
-                      },
-                      '& p': {
-                        color: '#718096',
-                        marginBottom: 1
-                      },
-                      '& ul, & ol': {
-                        color: '#718096',
-                        paddingLeft: 3,
-                        marginBottom: 1
-                      },
-                      '& li': {
-                        marginBottom: 0.5
-                      },
-                      '& strong': {
-                        color: '#a0aec0'
-                      }
-                    }}>
-                      <ReactMarkdown>
-                        {liveInsights[q.id]}
-                      </ReactMarkdown>
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-    );
-  };
-
-  const renderInsightsCard = (title, data, icon) => {
-    if (!data) return null;
-
-    const renderContent = (content) => {
-      if (typeof content === 'string') {
-        return <p className="text-gray-600">{content}</p>;
-      }
-      
-      if (Array.isArray(content)) {
-        return (
-          <ul className="list-disc pl-5">
-            {content.map((item, index) => (
-              <li key={index} className="text-gray-600 mb-2">{item}</li>
-            ))}
-          </ul>
-        );
-      }
-
-      if (typeof content === 'object') {
-        return Object.entries(content).map(([subTitle, subContent], index) => (
-          <div key={index} className="mb-4">
-            <h4 className="text-lg font-semibold mb-2">{subTitle}</h4>
-            {renderContent(subContent)}
-          </div>
-        ));
-      }
-
-      return null;
-    };
-
-    return (
-      <Paper 
-        sx={{ 
-          p: 3, 
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: 'background.paper',
-          boxShadow: 3
-        }}
-      >
-        <Typography variant="h6" color="primary" gutterBottom>
-          {title}
-        </Typography>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle1" color="text.secondary">
-            Summary
-          </Typography>
-          <Typography variant="body1">
-            {renderContent(data)}
-          </Typography>
-        </Box>
-      </Paper>
-    );
   };
 
   const renderCompetitorsStep = () => {
     if (loadingStage) {
       return (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <CircularProgress />
-          <Typography variant="h6" sx={{ mt: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
+          <CircularProgress sx={{ mb: 3, color: '#6c5ce7' }} />
+          <Typography variant="h6" sx={{ color: 'white' }}>
             {loadingStage}
           </Typography>
         </Box>
       );
     }
 
-    if (error) {
+    if (!competitors.length) {
       return (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
+        <Typography variant="body1" gutterBottom sx={{ color: 'white' }}>
+          No competitors found.
+        </Typography>
       );
     }
 
     return (
       <>
-        <Box sx={{ py: 4 }}>
-          <Typography
-            variant="h5"
-            align="center"
-            gutterBottom
-            sx={{ color: 'white !important', mb: 3 }}
-          >
-            Top Competitors Analysis
-          </Typography>
-          <Grid container spacing={3} sx={{ mt: 2 }}>
-            {competitors.map((competitor, index) => (
-              <Grid item xs={12} md={4} key={index}>
-                <Paper 
-                  sx={{ 
-                    p: 3, 
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    backgroundColor: 'background.paper',
-                    boxShadow: 3
-                  }}
-                >
-                  <Typography variant="h6" color="primary" gutterBottom>
+        <Typography variant="subtitle2" gutterBottom sx={{ color: '#a0aec0', mb: 3, fontStyle: 'italic', textAlign: 'center' }}>
+          Note: The market share data shown below is an AI-generated estimate based on available market information. These values should be considered approximate and used as a starting point for further research.
+        </Typography>
+        
+        <Grid container spacing={3}>
+          {competitors.map((competitor, index) => (
+            <Grid item xs={12} key={index}>
+              <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ color: '#e2e8f0', mb: 1 }}>
                     {competitor.name}
                   </Typography>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle1" color="text.secondary">
-                      Market Share
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#a0aec0', display: 'inline' }}>
+                      Market Share: 
                     </Typography>
-                    <Typography variant="body1">
-                      {competitor.marketShare}
+                    <Typography variant="body2" sx={{ color: '#e2e8f0', display: 'inline', ml: 1 }}>
+                      {Math.round(competitor.marketShare)}%
                     </Typography>
                   </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle1" color="text.secondary">
-                      Target Audience
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#a0aec0', display: 'inline' }}>
+                      Target Audience: 
                     </Typography>
-                    <Typography variant="body1">
+                    <Typography variant="body2" sx={{ color: '#e2e8f0', display: 'inline', ml: 1 }}>
                       {competitor.targetAudience}
                     </Typography>
                   </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle1" color="text.secondary">
-                      Marketing Strategies
+                  <Box>
+                    <Typography variant="body2" sx={{ color: '#a0aec0', display: 'inline' }}>
+                      Marketing Strategies: 
                     </Typography>
-                    <Typography variant="body1">
+                    <Typography variant="body2" sx={{ color: '#e2e8f0', display: 'inline', ml: 1 }}>
                       {competitor.marketingStrategies}
                     </Typography>
                   </Box>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-        {renderStartupInsights()}
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       </>
     );
   };
@@ -1204,9 +428,9 @@ const StartupForm = () => {
   const renderAnalysisStep = () => {
     if (loadingStage) {
       return (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <CircularProgress />
-          <Typography variant="h6" sx={{ mt: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
+          <CircularProgress sx={{ mb: 3, color: '#6c5ce7' }} />
+          <Typography variant="h6" sx={{ color: 'white' }}>
             {loadingStage}
           </Typography>
         </Box>
@@ -1221,7 +445,7 @@ const StartupForm = () => {
       );
     }
 
-    if (!analysis) {
+    if (!insights) {
       return null;
     }
 
@@ -1234,7 +458,7 @@ const StartupForm = () => {
                 Market Overview
               </Typography>
               <Typography variant="body1">
-                {analysis.marketInsights.summary}
+                {insights.marketAnalysis?.summary}
               </Typography>
             </Paper>
           </Grid>
@@ -1244,7 +468,7 @@ const StartupForm = () => {
                 Competitive Analysis
               </Typography>
               <Typography variant="body1">
-                {analysis.competitorInsights.summary}
+                {insights.competitorInsights?.summary}
               </Typography>
             </Paper>
           </Grid>
@@ -1254,7 +478,7 @@ const StartupForm = () => {
                 Funding Strategy
               </Typography>
               <Typography variant="body1">
-                {analysis.fundingInsights.summary}
+                {insights.fundingInsights?.summary}
               </Typography>
             </Paper>
           </Grid>
@@ -1264,7 +488,7 @@ const StartupForm = () => {
                 Growth Strategy
               </Typography>
               <Typography variant="body1">
-                {analysis.userGrowthInsights.summary}
+                {insights.userGrowthInsights?.summary}
               </Typography>
             </Paper>
           </Grid>
@@ -1274,7 +498,7 @@ const StartupForm = () => {
           <Typography variant="h5" gutterBottom>
             Detailed Analysis & Projections
           </Typography>
-          <AnalysisDashboard analysisData={analysis} />
+          <AnalysisDashboard analysisData={insights} />
         </Box>
 
         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
@@ -1282,7 +506,7 @@ const StartupForm = () => {
             variant="outlined"
             onClick={() => {
               setActiveStep(0);
-              setAnalysis(null);
+              setInsights(null);
             }}
           >
             Start New Analysis
@@ -1305,8 +529,6 @@ const StartupForm = () => {
 
     return (
       <div className="container mx-auto p-6">
-        {/* <h1 className="text-3xl font-bold text-center mb-8">Startup Insights Analysis</h1> */}
-        
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
           <Button
             variant="contained"
@@ -1319,61 +541,22 @@ const StartupForm = () => {
         </Box>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Risks & Solutions card hidden
-          {renderInsightsCard("Risks & Solutions", {
-            "Key Risks": insights.risksAndSolutions?.key_risks || [],
-            "Solutions": insights.risksAndSolutions?.solutions || []
-          }, "🛡️")}
-          */}
-          {/* Market Analysis card hidden
-          {renderInsightsCard("Market Analysis", {
-            "Current Growth Rate": insights.marketAnalysis?.current_growth_rate,
-            "Market Trends": insights.marketAnalysis?.key_market_trends || [],
-            "Projected Growth": insights.marketAnalysis?.projected_growth
-          }, "📈")}
-          */}
-          
-          {/* Audience & Marketing card hidden
-          {renderInsightsCard("Audience & Marketing", {
-            "Target Audience": insights.audienceAndMarketing?.target_audience,
-            "Marketing Strategy": insights.audienceAndMarketing?.marketing_strategies || [],
-            "Investor Appeal": insights.audienceAndMarketing?.investor_appeal_points || []
-          }, "🎯")}
-          */}
-          
-          {/* Revenue Streams card hidden
-          {renderInsightsCard("Revenue Streams", {
-            "Primary Revenue": insights.revenueStreams?.primary_revenue_sources || [],
-            "Passive Income": insights.revenueStreams?.passive_income_opportunities || [],
-            "Capital Raising": insights.revenueStreams?.capital_raising_strategies || []
-          }, "💰")}
-          */}
-          
-          {/* Suggested Names card hidden
-          {renderInsightsCard("Suggested Names", 
-            insights.startupNames?.suggested_modern_names || [], 
-            "✨")}
-          */}
         </div>
       </div>
     );
   };
-  
-  // Function to load a history item
+
   const loadHistoryItem = (item) => {
-    // Get the market data from the selected history item
     const marketData = item.marketData;
     
     if (!marketData) return;
     
-    // Close the history modal
     setShowHistory(false);
     
-    // Set the insights and competitors from the history item
     setInsights({
       demographics: marketData.demographics,
       marketAnalysis: {
-        current_growth_rate: marketData.marketSize?.[marketData.marketSize.length - 1]?.value
+        trendAnalysis: marketData.marketAnalysis?.summary || 'No analysis available'
       },
       swot: marketData.swot
     });
@@ -1385,13 +568,11 @@ const StartupForm = () => {
       marketingStrategies: comp.strategies
     })) || []);
     
-    // Store the analysis ID and market data in localStorage for the charts dashboard
     localStorage.setItem('marketAnalysisData', JSON.stringify({
       ...marketData,
       analysisId: item.id
     }));
     
-    // Move to the competitors step
     setActiveStep(4);
   };
 
@@ -1425,74 +606,33 @@ const StartupForm = () => {
           Transform your idea into a viable business concept
         </Typography>
 
-        {!analysis ? (
+        {!insights ? (
           <>
             <Stepper 
               activeStep={activeStep} 
               alternativeLabel
               sx={{ 
                 mb: 5,
-                '& .MuiStepLabel-label': {
-                  color: 'white !important',
-                  '&.Mui-completed': {
-                    color: 'white !important'
-                  },
-                  '&.Mui-active': {
-                    color: 'white !important'
-                  },
-                  '&.Mui-disabled': {
-                    color: 'rgba(255, 255, 255, 0.7) !important'
-                  }
+                '& .MuiStepLabel-root .Mui-completed': {
+                  color: '#6c5ce7',
                 },
-                '& .MuiStepIcon-root': {
+                '& .MuiStepLabel-label.Mui-completed.MuiStepLabel-alternativeLabel': {
+                  color: '#a0aec0',
+                },
+                '& .MuiStepLabel-root .Mui-active': {
+                  color: '#6c5ce7',
+                },
+                '& .MuiStepLabel-label.Mui-active.MuiStepLabel-alternativeLabel': {
                   color: 'white',
-                  '&.Mui-completed': {
-                    color: '#6c5ce7'
-                  },
-                  '&.Mui-active': {
-                    color: '#6c5ce7'
-                  },
-                  '& text': {
-                    fill: '#000000 !important'
-                  }
                 },
-                '& .MuiStepConnector-line': {
-                  borderColor: '#2d3436',
-                }
+                '& .MuiStepLabel-root .Mui-active .MuiStepIcon-text': {
+                  fill: 'white',
+                },
               }}
             >
               {STEPS.map((label) => (
                 <Step key={label}>
-                  <StepLabel 
-                    sx={{
-                      '& .MuiStepLabel-label': {
-                        color: 'white !important',
-                        '&.Mui-completed': {
-                          color: 'white !important'
-                        },
-                        '&.Mui-active': {
-                          color: 'white !important'
-                        },
-                        '&.Mui-disabled': {
-                          color: 'rgba(255, 255, 255, 0.7) !important'
-                        }
-                      },
-                      '& .MuiStepIcon-root': {
-                        color: 'white',
-                        '&.Mui-completed': {
-                          color: '#6c5ce7'
-                        },
-                        '&.Mui-active': {
-                          color: '#6c5ce7'
-                        },
-                        '& text': {
-                          fill: '#000000 !important'
-                        }
-                      }
-                    }}
-                  >
-                    {label}
-                  </StepLabel>
+                  <StepLabel>{label}</StepLabel>
                 </Step>
               ))}
             </Stepper>
@@ -1521,20 +661,6 @@ const StartupForm = () => {
                     >
                       History
                     </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setFormData(SAMPLE_DATA)}
-                      sx={{
-                        color: '#6c5ce7',
-                        borderColor: '#6c5ce7',
-                        '&:hover': {
-                          borderColor: '#5f50e1',
-                          backgroundColor: 'rgba(108, 92, 231, 0.1)'
-                        }
-                      }}
-                    >
-                      Fill Sample Data
-                    </Button>
                   </Box>
                 )}
                 {/* Form Content */}
@@ -1550,58 +676,6 @@ const StartupForm = () => {
                       }
                     }}>
                       {renderBasicInfo()}
-                    </Box>
-                  )}
-                  {activeStep === 1 && (
-                    <Box sx={{ 
-                      '& .MuiGrid-root': { 
-                        '& .MuiFormControl-root': {
-                          backgroundColor: '#242936',
-                          borderRadius: 1,
-                          p: 1
-                        }
-                      }
-                    }}>
-                      {renderMarketCompetition()}
-                    </Box>
-                  )}
-                  {activeStep === 2 && (
-                    <Box sx={{ 
-                      '& .MuiGrid-root': { 
-                        '& .MuiFormControl-root': {
-                          backgroundColor: '#242936',
-                          borderRadius: 1,
-                          p: 1
-                        }
-                      }
-                    }}>
-                      {renderFinancialGrowth()}
-                    </Box>
-                  )}
-                  {activeStep === 3 && (
-                    <Box sx={{ 
-                      '& .MuiGrid-root': { 
-                        '& .MuiFormControl-root': {
-                          backgroundColor: '#242936',
-                          borderRadius: 1,
-                          p: 1
-                        }
-                      }
-                    }}>
-                      {renderAiReports()}
-                    </Box>
-                  )}
-                  {activeStep === 4 && (
-                    <Box sx={{ 
-                      '& .MuiGrid-root': { 
-                        '& .MuiFormControl-root': {
-                          backgroundColor: '#242936',
-                          borderRadius: 1,
-                          p: 1
-                        }
-                      }
-                    }}>
-                      {renderCompetitorsStep()}
                     </Box>
                   )}
                 </Box>
@@ -1646,18 +720,88 @@ const StartupForm = () => {
             </Card>
           </>
         ) : (
-          <AnalysisDashboard 
-            analysis={analysis}
-            competitors={competitors}
-            insights={insights}
-            onReset={() => {
-              setAnalysis(null);
-              setCompetitors([]);
-              setInsights(null);
-              setActiveStep(0);
-              setFormData({});
-            }}
-          />
+          <Box>
+            {activeStep === 1 && (
+              <Box>
+                {renderCompetitorsStep()}
+                {renderStartupInsights()}
+                
+                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
+                  <Button
+                    onClick={handleBack}
+                    variant="outlined"
+                    sx={{
+                      color: '#6c5ce7',
+                      borderColor: '#6c5ce7',
+                      '&:hover': {
+                        borderColor: '#5f50e1',
+                        backgroundColor: 'rgba(108, 92, 231, 0.1)'
+                      }
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="contained"
+                    onClick={() => setActiveStep(2)}
+                    sx={{
+                      bgcolor: '#6c5ce7',
+                      '&:hover': {
+                        bgcolor: '#5f50e1'
+                      }
+                    }}
+                  >
+                    View Dashboard
+                  </Button>
+                </Box>
+              </Box>
+            )}
+            
+            {activeStep === 2 && (
+              <AnalysisDashboard 
+                analysis={{
+                  overview: {
+                    growthRate: insights?.marketAnalysis?.growth_rate || '0',
+                    marketSize: insights?.demographics?.market_size || 'N/A',
+                    competitorCount: competitors?.length || '0'
+                  },
+                  marketAnalysis: {
+                    trendAnalysis: insights?.marketAnalysis?.summary || 'No analysis available'
+                  },
+                  financialProjections: {
+                    estimatedFunding: {
+                      initialFunding: insights?.fundingInsights?.initial_funding || 0
+                    },
+                    insights: insights?.fundingInsights?.summary || 'No funding insights available',
+                    projectionCharts: {
+                      financial: []
+                    }
+                  },
+                  competitorAnalysis: {
+                    insights: insights?.competitorInsights?.summary || 'No competitor insights available',
+                    competitorData: competitors || [],
+                    marketShare: competitors || [],
+                    radarData: []
+                  },
+                  marketTrends: {
+                    growthProjection: []
+                  },
+                  aiRecommendations: {
+                    growthStrategy: insights?.userGrowthInsights?.summary || 'No growth strategy available',
+                    riskMitigation: insights?.risksAndSolutions?.solutions || [],
+                    swot: insights?.swot || {
+                      strengths: [],
+                      weaknesses: [],
+                      opportunities: [],
+                      threats: []
+                    }
+                  }
+                }}
+                competitors={competitors}
+                insights={insights}
+              />
+            )}
+          </Box>
         )}
 
         {error && (
@@ -1665,7 +809,6 @@ const StartupForm = () => {
             {error}
           </Alert>
         )}
-        {renderLiveInsightsSection()}
         
         {/* History Modal */}
         {showHistory && (
