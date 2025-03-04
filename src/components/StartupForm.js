@@ -386,17 +386,19 @@ const StartupForm = () => {
       // Save analysis to Firebase
       if (user) {
         try {
-          const savedId = await saveToFirebase({
+          const completeData = {
             ...formData,
             competitors: competitorData,
             ...insightsData
-          });
+          };
+          
+          const savedId = await saveToFirebase(completeData);
           
           console.log('Analysis saved with ID:', savedId);
           
-          // Store the reference in localStorage for the dashboard charts
+          // Store the complete data in localStorage for the dashboard charts
           localStorage.setItem('marketAnalysisData', JSON.stringify({
-            ...insightsData,
+            ...completeData,
             analysisId: savedId
           }));
         } catch (err) {
@@ -952,29 +954,76 @@ const StartupForm = () => {
     
     if (!marketData) return;
     
+    console.log('Loading history item:', item);
+    console.log('Market data structure:', marketData);
+    console.log('Market data keys:', Object.keys(marketData));
+    console.log('SWOT data:', marketData.swot);
+    console.log('Business Strategy data:', marketData.businessStrategy);
+    
     setShowHistory(false);
     
-    setInsights({
-      demographics: marketData.demographics,
-      marketAnalysis: {
-        trendAnalysis: marketData.marketAnalysis?.summary || 'No analysis available'
-      },
-      swot: marketData.swot
-    });
+    // Set the form data if available in the history item
+    if (marketData.startupIdea || marketData.industry || marketData.operationLocation) {
+      setFormData({
+        startupIdea: marketData.startupIdea || '',
+        industry: marketData.industry || '',
+        operationLocation: marketData.operationLocation || ''
+      });
+    }
     
+    // Use the same structure as when data is generated
+    if (marketData.swot) {
+      setInsights(marketData);
+    } else {
+      // Fallback if for some reason the data structure is different
+      setInsights({
+        demographics: marketData.demographics || {},
+        marketAnalysis: {
+          trendAnalysis: marketData.marketAnalysis?.summary || 'No analysis available',
+          riskLevel: marketData.marketAnalysis?.riskLevel || 'Medium',
+          growthPotential: marketData.marketAnalysis?.growthPotential || 'Medium'
+        },
+        swot: marketData.swot || {
+          strengths: [],
+          weaknesses: [],
+          opportunities: [],
+          threats: []
+        },
+        marketOverview: marketData.marketOverview || '',
+        targetAudience: marketData.targetAudience || '',
+        businessModel: marketData.businessModel || '',
+        valueProposition: marketData.valueProposition || '',
+        fundingOptions: marketData.fundingOptions || '',
+        businessStrategy: marketData.businessStrategy || {
+          revenueModel: 'N/A',
+          pricingStrategy: 'N/A',
+          marketingChannels: [],
+          revenuePerUser: 'N/A',
+          minimumInvestment: 'N/A',
+          breakEvenTime: 'N/A',
+          userGrowthRate: 'N/A',
+          marketTrends: [],
+          customerAcquisition: 'N/A',
+          valueProp: 'N/A'
+        }
+      });
+    }
+    
+    // Set competitors with all their data
     setCompetitors(marketData.competitors?.map(comp => ({
-      name: comp.name,
-      marketShare: comp.marketShare,
-      targetAudience: comp.targetMarket,
-      marketingStrategies: comp.strategies
+      name: comp.name || '',
+      marketShare: comp.marketShare || 0,
+      targetAudience: comp.targetMarket || '',
+      marketingStrategies: comp.strategies || ''
     })) || []);
     
+    // Save complete market data to localStorage
     localStorage.setItem('marketAnalysisData', JSON.stringify({
       ...marketData,
       analysisId: item.id
     }));
     
-    setActiveStep(4);
+    setActiveStep(1); // Set to "Generate Report" step (index 1)
   };
 
   return (
