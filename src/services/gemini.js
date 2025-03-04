@@ -4,11 +4,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY);
 
 // Helper function to format startup data for prompt
-const formatStartupDataForPrompt = (formData) => {
+export const formatStartupDataForPrompt = (formData) => {
   return `
-    Startup Idea: ${formData.startupIdea}
-    Industry: ${formData.industry}
-    Problem & Solution: ${formData.problemSolution}
+    Startup Idea & Problem: ${formData.startupIdea || 'N/A'}
+    Industry: ${formData.industry || 'N/A'}
+    Operation Location: ${formData.operationLocation || 'N/A'}
   `;
 };
 
@@ -86,33 +86,35 @@ export const getCompetitorsWithGemini = async (formData) => {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     const prompt = `Identify the top three competitors for the following startup idea:
 
-Startup Idea: ${formData.startupIdea}
-Industry: ${formData.industry}
+    Startup Idea & Problem: ${formData.startupIdea}
+    Industry: ${formData.industry}
+    Operation Location: ${formData.operationLocation}
 
-For each competitor, provide the following details in a simple format:
+    For each competitor, provide the following details in a simple format:
 
-Competitor 1:
-Name: [name of a real company in this space]
-Market Share: [realistic percentage between 5-40%]
-Target Audience: [audience]
-Marketing Strategies: [strategies]
+    Competitor 1:
+    Name: [name of a real company in this space]
+    Market Share: [realistic percentage between 5-40%]
+    Target Audience: [audience]
+    Marketing Strategies: [strategies]
 
-Competitor 2:
-Name: [name of a real company in this space]
-Market Share: [realistic percentage between 5-30%]
-Target Audience: [audience]
-Marketing Strategies: [strategies]
+    Competitor 2:
+    Name: [name of a real company in this space]
+    Market Share: [realistic percentage between 5-30%]
+    Target Audience: [audience]
+    Marketing Strategies: [strategies]
 
-Competitor 3:
-Name: [name of a real company in this space]
-Market Share: [realistic percentage between 5-20%]
-Target Audience: [audience]
-Marketing Strategies: [strategies]
+    Competitor 3:
+    Name: [name of a real company in this space]
+    Market Share: [realistic percentage between 5-20%]
+    Target Audience: [audience]
+    Marketing Strategies: [strategies]
 
-Important: 
-1. For Market Share, provide realistic estimates based on actual market research when possible
-2. The three competitors should NOT add up to 100% as there are many smaller players in the market
-3. Only provide the number without any symbols or text (e.g., "30" not "30%" or "~30%")`;
+    Important: 
+    1. For Market Share, provide realistic estimates based on actual market research when possible
+    2. The three competitors should NOT add up to 100% as there are many smaller players in the market
+    3. Only provide the number without any symbols or text (e.g., "30" not "30%" or "~30%")
+    4. If possible, consider competitors that operate in or serve ${formData.operationLocation}`;
 
     console.log('Generated detailed competitors prompt:', prompt);
 
@@ -255,148 +257,48 @@ export const analyzeWithGemini = async (formData) => {
   }
 };
 
-const generateSwotPrompt = (formData) => `
-Analyze the following startup idea and generate a detailed SWOT analysis. Focus on specific, actionable insights based on current market trends and industry data.
+export const generateSwotPrompt = (formData) => {
+  return `Perform a comprehensive SWOT analysis for the following startup:
 
-Startup Idea: ${formData.startupIdea}
-Industry: ${formData.industry}
-Problem & Solution: ${formData.problemSolution}
+    Startup Idea & Problem: ${formData.startupIdea}
+    Industry: ${formData.industry}
+    Operation Location: ${formData.operationLocation}
 
-Format your response EXACTLY as follows, with each point being specific and actionable:
+    Please provide a clear and concise analysis in the following format:
 
-STRENGTHS
-- [List a specific strength related to the startup's unique value proposition]
-- [List a specific strength related to technology or innovation]
-- [List a specific strength related to market positioning]
-- [List a specific strength related to team or resources]
-- [List a specific strength related to competitive advantage]
+    STRENGTHS
+    - [1-2 sentence explanation of a key strength]
+    - [1-2 sentence explanation of a key strength]
+    - [1-2 sentence explanation of a key strength]
+    - [1-2 sentence explanation of a key strength]
+    - [1-2 sentence explanation of a key strength]
 
-WEAKNESSES
-- [List a specific internal challenge or limitation]
-- [List a specific resource constraint]
-- [List a specific market-related weakness]
-- [List a specific operational weakness]
-- [List a specific competitive weakness]
+    WEAKNESSES
+    - [1-2 sentence explanation of a key weakness]
+    - [1-2 sentence explanation of a key weakness]
+    - [1-2 sentence explanation of a key weakness]
+    - [1-2 sentence explanation of a key weakness]
+    - [1-2 sentence explanation of a key weakness]
 
-OPPORTUNITIES
-- [List a specific market opportunity]
-- [List a specific technology opportunity]
-- [List a specific growth opportunity]
-- [List a specific partnership opportunity]
-- [List a specific timing or trend-based opportunity]
+    OPPORTUNITIES
+    - [1-2 sentence explanation of a key opportunity]
+    - [1-2 sentence explanation of a key opportunity]
+    - [1-2 sentence explanation of a key opportunity]
+    - [1-2 sentence explanation of a key opportunity]
+    - [1-2 sentence explanation of a key opportunity]
 
-THREATS
-- [List a specific competitive threat]
-- [List a specific market risk]
-- [List a specific regulatory or compliance risk]
-- [List a specific technology risk]
-- [List a specific economic or market condition threat]
+    THREATS
+    - [1-2 sentence explanation of a key threat]
+    - [1-2 sentence explanation of a key threat]
+    - [1-2 sentence explanation of a key threat]
+    - [1-2 sentence explanation of a key threat]
+    - [1-2 sentence explanation of a key threat]
 
-Important Guidelines:
-1. Each point must be specific to this startup and industry
-2. Do not use generic statements
-3. Focus on actionable insights
-4. Base analysis on current market trends
-5. Consider both immediate and long-term factors
-6. Remove all placeholder brackets [] from your response
-7. Each point should be a complete, clear statement
-
-Example format for a point:
-STRENGTHS
-- Proprietary AI algorithm reduces processing time by 60% compared to competitors
-(NOT: "Good technology" or "[Strong technology]")`;
-
-const parseSwotData = (text) => {
-  try {
-    console.log('Parsing SWOT text:', text); // Debug log
-
-    const sections = {
-      strengths: [],
-      weaknesses: [],
-      opportunities: [],
-      threats: []
-    };
-
-    let currentSection = null;
-
-    // Split by lines and process each line
-    const lines = text.split('\n');
-    console.log('Split lines:', lines); // Debug log
-
-    lines.forEach(line => {
-      line = line.trim();
-      if (!line) return;
-
-      // Check for section headers
-      if (line === 'STRENGTHS') {
-        currentSection = 'strengths';
-        console.log('Found strengths section');
-      } else if (line === 'WEAKNESSES') {
-        currentSection = 'weaknesses';
-        console.log('Found weaknesses section');
-      } else if (line === 'OPPORTUNITIES') {
-        currentSection = 'opportunities';
-        console.log('Found opportunities section');
-      } else if (line === 'THREATS') {
-        currentSection = 'threats';
-        console.log('Found threats section');
-      } else if (line.startsWith('-') && currentSection) {
-        const item = line.substring(1).trim();
-        if (item && item !== '[Strength 1]' && !item.includes('[') && !item.includes(']')) {
-          sections[currentSection].push(item);
-          console.log(`Added to ${currentSection}:`, item);
-        }
-      }
-    });
-
-    // If no real data was parsed, use test data
-    const hasRealData = Object.values(sections).some(arr => arr.length > 0);
-    if (!hasRealData) {
-      console.log('No real SWOT data found, using test data');
-      return {
-        strengths: [
-          'Strong market presence',
-          'Innovative technology',
-          'Experienced team',
-          'Scalable solution',
-          'Clear value proposition'
-        ],
-        weaknesses: [
-          'Limited resources',
-          'New market entrant',
-          'High initial costs',
-          'Complex implementation',
-          'Dependency on third-party services'
-        ],
-        opportunities: [
-          'Growing market demand',
-          'Technology advancement',
-          'Partnership possibilities',
-          'International expansion',
-          'New market segments'
-        ],
-        threats: [
-          'Intense competition',
-          'Regulatory changes',
-          'Market volatility',
-          'Technology disruption',
-          'Economic uncertainty'
-        ]
-      };
-    }
-
-    console.log('Final parsed SWOT data:', sections);
-    return sections;
-  } catch (error) {
-    console.error('Error parsing SWOT data:', error);
-    // Return default structure with empty arrays
-    return {
-      strengths: [],
-      weaknesses: [],
-      opportunities: [],
-      threats: []
-    };
-  }
+    IMPORTANT: 
+    1. Make all points specific to this particular startup idea, industry, and location
+    2. Keep explanations concise but informative (1-2 sentences per point)
+    3. Do not use Markdown formatting in your response
+    4. Focus on practical, realistic factors rather than theoretical concerns`;
 };
 
 export const getStartupInsightsWithGemini = async (formData) => {
@@ -411,12 +313,19 @@ export const getStartupInsightsWithGemini = async (formData) => {
     const swotText = swotResponse.text();
     const swotData = parseSwotData(swotText);
 
+    // Get business strategy insights
+    const businessStrategyPrompt = generateBusinessStrategyPrompt(formData);
+    const businessStrategyResult = await model.generateContent(businessStrategyPrompt);
+    const businessStrategyResponse = await businessStrategyResult.response;
+    const businessStrategyText = businessStrategyResponse.text();
+    const businessStrategyData = parseBusinessStrategyData(businessStrategyText);
+
     // Get demographic data (using simplified demographic prompt)
     const demographicPrompt = `Analyze the following startup idea and provide detailed demographic insights:
     
-    Startup Idea: ${formData.startupIdea}
+    Startup Idea & Problem: ${formData.startupIdea}
     Industry: ${formData.industry}
-    Problem & Solution: ${formData.problemSolution}
+    Operation Location: ${formData.operationLocation}
 
     Please provide demographic insights in this exact format (use numbers only, no symbols):
 
@@ -537,21 +446,345 @@ export const getStartupInsightsWithGemini = async (formData) => {
       });
     }
 
-    return {
+    // Structure the final insights object
+    const insights = {
+      swot: swotData,
       demographics: {
         ageGroups,
         genderDistribution,
         geographicDistribution
       },
       marketAnalysis,
-      swot: swotData
+      competitorInsights: {
+        summary: marketAnalysis?.competitive_landscape || 'Not available'
+      },
+      fundingInsights: {
+        summary: marketAnalysis?.funding_requirements || 'Not available'
+      },
+      userGrowthInsights: {
+        summary: marketAnalysis?.growth_potential || 'Not available'
+      },
+      businessStrategy: businessStrategyData
     };
 
+    return insights;
   } catch (error) {
-    console.error('Gemini API Error:', error);
-    return null;
+    console.error('Error generating insights:', error);
+    return {
+      swot: {
+        strengths: [],
+        weaknesses: [],
+        opportunities: [],
+        threats: []
+      },
+      demographics: {},
+      marketAnalysis: {},
+      competitorInsights: {},
+      fundingInsights: {},
+      userGrowthInsights: {},
+      businessStrategy: {}
+    };
   }
 };
+
+export const generateBusinessStrategyPrompt = (formData) => {
+  return `Analyze the following startup idea and provide detailed business strategy insights:
+
+    Startup Idea & Problem: ${formData.startupIdea}
+    Industry: ${formData.industry}
+    Operation Location: ${formData.operationLocation}
+
+    Please provide business strategy insights in this exact format using the following headings:
+
+    TARGET_USERS
+    [Detailed description of the ideal target users/customers for this startup]
+
+    USER_ACQUISITION_STRATEGY
+    [3-5 effective strategies to acquire users/customers for this specific startup]
+
+    BUSINESS_MODELS
+    [2-3 appropriate business models that would work well for this startup]
+
+    REVENUE_PER_USER
+    [Realistic estimate of average revenue per user in Indian Rupees (₹)]
+
+    MINIMUM_INVESTMENT
+    [Minimum investment required in Indian Rupees (₹)]
+    
+    BREAK_EVEN_TIME
+    [Estimated time to break-even, always include the unit (months or years). For example: "18 months" or "2 years"]
+
+    USER_GROWTH_RATE
+    [Expected user growth rate percentage per year]
+
+    MARKET_TRENDS
+    [3-5 current market trends that support this startup idea]
+
+    For numerical values, provide realistic estimates based on industry standards. For Indian currency values, present them without commas or symbols - just the number. I will format them appropriately.
+    
+    IMPORTANT: 
+    1. Do not use any Markdown formatting (like **, *, or other special characters) in your response. Provide plain text only.
+    2. For break-even time, ALWAYS specify the unit (months or years). Never omit the unit.
+  `;
+};
+
+// Function to parse business strategy data
+export const parseBusinessStrategyData = (text) => {
+  try {
+    console.log('Parsing business strategy text:', text);
+
+    const businessStrategyData = {
+      targetUsers: '',
+      userAcquisitionStrategy: [],
+      businessModels: [],
+      revenuePerUser: '',
+      minimumInvestment: '',
+      breakEvenTime: '',
+      userGrowthRate: '',
+      marketTrends: []
+    };
+
+    // Helper function to remove markdown formatting
+    const removeMarkdown = (text) => {
+      if (!text) return '';
+      // Remove bold/italic markers
+      return text.replace(/\*\*/g, '').replace(/\*/g, '');
+    };
+
+    // Helper function to format number in Indian format
+    const formatIndianCurrency = (num) => {
+      if (!num) return '';
+      // Convert to number if it's a string
+      const number = typeof num === 'string' ? parseFloat(num.replace(/,/g, '')) : num;
+      // Format as Indian currency notation (e.g., 10,00,000)
+      const formatted = number.toLocaleString('en-IN');
+      return `₹${formatted}`;
+    };
+
+    // Extract sections using regex patterns
+    const targetUsersMatch = text.match(/TARGET_USERS\s+([\s\S]*?)(?=USER_ACQUISITION_STRATEGY|$)/);
+    if (targetUsersMatch && targetUsersMatch[1]) {
+      businessStrategyData.targetUsers = removeMarkdown(targetUsersMatch[1].trim());
+    }
+
+    const acquisitionMatch = text.match(/USER_ACQUISITION_STRATEGY\s+([\s\S]*?)(?=BUSINESS_MODELS|$)/);
+    if (acquisitionMatch && acquisitionMatch[1]) {
+      const strategies = acquisitionMatch[1].split(/\n+/).filter(line => line.trim().startsWith('-') || line.trim().match(/^\d+\./));
+      businessStrategyData.userAcquisitionStrategy = strategies
+        .map(s => removeMarkdown(s.replace(/^-|\d+\.\s*/, '').trim()))
+        .filter(s => s);
+    }
+
+    const modelsMatch = text.match(/BUSINESS_MODELS\s+([\s\S]*?)(?=REVENUE_PER_USER|$)/);
+    if (modelsMatch && modelsMatch[1]) {
+      const models = modelsMatch[1].split(/\n+/).filter(line => line.trim().startsWith('-') || line.trim().match(/^\d+\./));
+      businessStrategyData.businessModels = models
+        .map(m => removeMarkdown(m.replace(/^-|\d+\.\s*/, '').trim()))
+        .filter(m => m);
+    }
+
+    const revenueMatch = text.match(/REVENUE_PER_USER\s+([\s\S]*?)(?=MINIMUM_INVESTMENT|$)/);
+    if (revenueMatch && revenueMatch[1]) {
+      const revenueText = removeMarkdown(revenueMatch[1].trim());
+      // Extract numbers from the revenue text
+      const revenueNumber = revenueText.match(/₹?\s*(\d+(?:[,.]\d+)?)/);
+      if (revenueNumber) {
+        const value = revenueNumber[1].replace(/,/g, '');
+        businessStrategyData.revenuePerUser = formatIndianCurrency(parseFloat(value));
+      } else {
+        businessStrategyData.revenuePerUser = revenueText;
+      }
+    }
+
+    const investmentMatch = text.match(/MINIMUM_INVESTMENT\s+([\s\S]*?)(?=BREAK_EVEN_TIME|$)/);
+    if (investmentMatch && investmentMatch[1]) {
+      const investmentText = removeMarkdown(investmentMatch[1].trim());
+      // Extract numbers from the investment text
+      const investmentNumber = investmentText.match(/₹?\s*(\d+(?:[,.]\d+)?)/);
+      if (investmentNumber) {
+        const value = investmentNumber[1].replace(/,/g, '');
+        businessStrategyData.minimumInvestment = formatIndianCurrency(parseFloat(value));
+      } else {
+        businessStrategyData.minimumInvestment = investmentText;
+      }
+    }
+
+    const breakEvenMatch = text.match(/BREAK_EVEN_TIME\s+([\s\S]*?)(?=USER_GROWTH_RATE|$)/);
+    if (breakEvenMatch && breakEvenMatch[1]) {
+      const breakEvenText = removeMarkdown(breakEvenMatch[1].trim());
+      
+      // Try to extract months
+      const monthsMatch = breakEvenText.match(/(\d+(?:[,.]\d+)?)\s*(?:months|month)/i);
+      if (monthsMatch) {
+        businessStrategyData.breakEvenTime = `${monthsMatch[1]} months`;
+      } else {
+        // Try to extract years
+        const yearsMatch = breakEvenText.match(/(\d+(?:[,.]\d+)?)\s*(?:years|year)/i);
+        if (yearsMatch) {
+          businessStrategyData.breakEvenTime = `${yearsMatch[1]} years`;
+        } else {
+          // If no unit is found, check if it's just a number and assume months
+          const numberMatch = breakEvenText.match(/(\d+(?:[,.]\d+)?)/);
+          if (numberMatch) {
+            businessStrategyData.breakEvenTime = `${numberMatch[1]} months`;
+          } else {
+            // If no pattern matches, use the original text
+            businessStrategyData.breakEvenTime = breakEvenText;
+          }
+        }
+      }
+    }
+
+    const growthMatch = text.match(/USER_GROWTH_RATE\s+([\s\S]*?)(?=MARKET_TRENDS|$)/);
+    if (growthMatch && growthMatch[1]) {
+      const growthText = removeMarkdown(growthMatch[1].trim());
+      // Extract percentage
+      const growthNumber = growthText.match(/(\d+(?:[,.]\d+)?)/);
+      businessStrategyData.userGrowthRate = growthNumber ? `${growthNumber[1]}%` : growthText;
+    }
+
+    const trendsMatch = text.match(/MARKET_TRENDS\s+([\s\S]*)/);
+    if (trendsMatch && trendsMatch[1]) {
+      const trends = trendsMatch[1].split(/\n+/).filter(line => line.trim().startsWith('-') || line.trim().match(/^\d+\./));
+      businessStrategyData.marketTrends = trends
+        .map(t => removeMarkdown(t.replace(/^-|\d+\.\s*/, '').trim()))
+        .filter(t => t);
+    }
+
+    console.log('Parsed business strategy data:', businessStrategyData);
+    return businessStrategyData;
+  } catch (error) {
+    console.error('Error parsing business strategy data:', error);
+    return {
+      targetUsers: 'Not available',
+      userAcquisitionStrategy: ['Not available'],
+      businessModels: ['Not available'],
+      revenuePerUser: 'Not available',
+      minimumInvestment: 'Not available',
+      breakEvenTime: 'Not available',
+      userGrowthRate: 'Not available',
+      marketTrends: ['Not available']
+    };
+  }
+};
+
+function parseSwotData(text) {
+  try {
+    console.log('Parsing SWOT text:', text); // Debug log
+
+    const sections = {
+      strengths: [],
+      weaknesses: [],
+      opportunities: [],
+      threats: []
+    };
+
+    // Parse each section
+    const strengthsMatch = text.match(/STRENGTHS\s+([\s\S]*?)(?=WEAKNESSES|$)/);
+    const weaknessesMatch = text.match(/WEAKNESSES\s+([\s\S]*?)(?=OPPORTUNITIES|$)/);
+    const opportunitiesMatch = text.match(/OPPORTUNITIES\s+([\s\S]*?)(?=THREATS|$)/);
+    const threatsMatch = text.match(/THREATS\s+([\s\S]*?)(?=IMPORTANT|$)/);
+
+    const removeMarkdown = (text) => {
+      if (!text) return '';
+      return text.replace(/\*\*/g, '').replace(/\*/g, '');
+    };
+
+    // Function to extract items from a section
+    const extractItems = (sectionText) => {
+      if (!sectionText) return [];
+      
+      const items = [];
+      // Match lines that start with a dash followed by content
+      const itemRegex = /-\s+(.+?)(?=\n-|\n\n|$)/gs;
+      let match;
+      
+      while ((match = itemRegex.exec(sectionText)) !== null) {
+        let item = match[1].trim();
+        
+        // If the item contains a colon (for the heading:detail format)
+        if (item.includes(':')) {
+          const [heading, ...detailParts] = item.split(':');
+          const detail = detailParts.join(':').trim();
+          
+          // Format as "Heading: Detail explanation"
+          item = `${heading.trim()}: ${detail}`;
+        }
+        
+        items.push(removeMarkdown(item));
+      }
+      
+      return items;
+    };
+
+    // Extract items from each section
+    if (strengthsMatch && strengthsMatch[1]) {
+      sections.strengths = extractItems(strengthsMatch[1]);
+    }
+    
+    if (weaknessesMatch && weaknessesMatch[1]) {
+      sections.weaknesses = extractItems(weaknessesMatch[1]);
+    }
+    
+    if (opportunitiesMatch && opportunitiesMatch[1]) {
+      sections.opportunities = extractItems(opportunitiesMatch[1]);
+    }
+    
+    if (threatsMatch && threatsMatch[1]) {
+      sections.threats = extractItems(threatsMatch[1]);
+    }
+
+    // Check if we got real data
+    const hasRealData = Object.values(sections).some(arr => arr.length > 0);
+    
+    // If no real data was parsed, use example data
+    if (!hasRealData) {
+      console.log('No real SWOT data found, using example data with medium content length');
+      return {
+        strengths: [
+          'Innovative proprietary technology that significantly reduces operational costs compared to existing solutions.',
+          'Strong founding team with relevant industry experience and technical expertise.',
+          'First-mover advantage in an emerging market segment with high growth potential.',
+          'Scalable business model allowing rapid expansion with minimal additional resource requirements.',
+          'Clear value proposition addressing a well-defined pain point in the target market.'
+        ],
+        weaknesses: [
+          'Limited initial capital which may restrict marketing efforts and slow customer acquisition.',
+          'Small current team size lacking expertise in some specialist areas needed for growth.',
+          'Product requires significant customer education for adoption, potentially lengthening sales cycles.',
+          'Reliance on third-party technologies for some core functionalities creates external dependencies.',
+          'Untested market reception for specific product features that differentiate the offering.'
+        ],
+        opportunities: [
+          'Recent regulatory changes opening new market segments that align perfectly with the product capabilities.',
+          'Potential strategic partnerships with established companies to accelerate market penetration.',
+          'Growing demand for cost-effective solutions in the target industry due to economic pressures.',
+          'International expansion possibilities, particularly in markets with similar regulatory environments.',
+          'Additional revenue streams through data analytics and complementary service offerings.'
+        ],
+        threats: [
+          'Large established competitors with significant resources who may develop similar solutions.',
+          'Changing regulatory landscape that could require costly compliance modifications.',
+          'Economic uncertainty potentially affecting customer budgets and purchasing decisions.',
+          'Rapid technology evolution potentially making current approaches obsolete.',
+          'Difficulties attracting specialized talent in a competitive hiring market.'
+        ]
+      };
+    }
+
+    console.log('Parsed SWOT data:', sections);
+    return sections;
+  } catch (error) {
+    console.error('Error parsing SWOT data:', error);
+    // Fallback
+    return {
+      strengths: ['Not available'],
+      weaknesses: ['Not available'],
+      opportunities: ['Not available'],
+      threats: ['Not available']
+    };
+  }
+}
 
 function parseSection(text, sectionType) {
   if (!text) return {};

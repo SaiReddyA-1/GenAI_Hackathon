@@ -25,7 +25,13 @@ import {
   Tooltip,
   Paper,
   Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { db } from '../config/firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { analyzeStartupIdea } from '../services/openai';
@@ -52,10 +58,14 @@ const StartupForm = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     startupIdea: '',
-    problemSolution: '',
-    industry: ''
+    industry: '',
+    operationLocation: ''
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({
+    startupIdea: false,
+    industry: false,
+    operationLocation: false
+  });
   const [loadingStage, setLoadingStage] = useState('');
   const [error, setError] = useState('');
   const [competitors, setCompetitors] = useState([]); 
@@ -101,19 +111,25 @@ const StartupForm = () => {
   const renderBasicInfo = () => (
     <Grid container spacing={3}>
       <Grid item xs={12}>
+        <Typography variant="h5" component="h2" sx={{ mb: 3, color: '#e2e8f0' }}>
+          Tell us about your startup
+        </Typography>
+        
         <TextField
           fullWidth
-          label="What's your innovative idea?"
-          value={formData.startupIdea || ''}
+          id="startupIdea"
+          label="What's your innovative idea and problem it solves?"
+          variant="outlined"
+          multiline
+          rows={4}
+          value={formData.startupIdea}
           onChange={(e) => handleFormChange('startupIdea', e.target.value)}
-          error={!!errors.startupIdea}
-          helperText={errors.startupIdea}
-          multiline
-          rows={3}
-          variant="outlined"
+          error={errors.startupIdea}
+          helperText={errors.startupIdea ? 'Please describe your startup idea and the problem it solves' : ''}
           sx={{
+            mb: 4,
             '& .MuiInputLabel-root': {
-              color: '#718096',
+              color: '#a0aec0',
               '&.Mui-focused': {
                 color: '#6c5ce7'
               }
@@ -121,9 +137,9 @@ const StartupForm = () => {
             '& .MuiOutlinedInput-root': {
               backgroundColor: '#1e2430',
               '& input, & textarea': {
-                color: '#4a5568',
+                color: '#e2e8f0',
                 '&::placeholder': {
-                  color: '#4a5568',
+                  color: '#a0aec0',
                   opacity: 0.7
                 }
               },
@@ -138,72 +154,27 @@ const StartupForm = () => {
               }
             },
             '& .MuiFormHelperText-root': {
-              color: '#718096'
+              color: '#a0aec0'
             }
           }}
         />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          label="What problem does it solve?"
-          value={formData.problemSolution || ''}
-          onChange={(e) => handleFormChange('problemSolution', e.target.value)}
-          error={!!errors.problemSolution}
-          helperText={errors.problemSolution}
-          multiline
-          rows={3}
-          variant="outlined"
-          sx={{
+
+        <FormControl 
+          fullWidth 
+          variant="outlined" 
+          error={errors.industry}
+          sx={{ 
+            mb: 4,
             '& .MuiInputLabel-root': {
-              color: '#718096',
+              color: '#a0aec0',
               '&.Mui-focused': {
                 color: '#6c5ce7'
               }
             },
             '& .MuiOutlinedInput-root': {
               backgroundColor: '#1e2430',
-              '& input, & textarea': {
-                color: '#4a5568',
-                '&::placeholder': {
-                  color: '#4a5568',
-                  opacity: 0.7
-                }
-              },
-              '& fieldset': {
-                borderColor: 'transparent'
-              },
-              '&:hover fieldset': {
-                borderColor: '#6c5ce7'
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#6c5ce7'
-              }
-            },
-            '& .MuiFormHelperText-root': {
-              color: '#718096'
-            }
-          }}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <FormControl fullWidth>
-          <InputLabel sx={{ 
-            color: '#718096',
-            '&.Mui-focused': {
-              color: '#6c5ce7'
-            }
-          }}>Industry</InputLabel>
-          <Select
-            value={formData.industry || ''}
-            onChange={(e) => handleFormChange('industry', e.target.value)}
-            label="Industry"
-            error={!!errors.industry}
-            sx={{
-              backgroundColor: '#1e2430',
-              color: '#4a5568',
               '& .MuiSelect-select': {
-                color: '#4a5568'
+                color: '#e2e8f0'
               },
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: 'transparent'
@@ -215,18 +186,75 @@ const StartupForm = () => {
                 borderColor: '#6c5ce7'
               },
               '& .MuiSelect-icon': {
-                color: '#4a5568'
+                color: '#a0aec0'
               }
-            }}
+            },
+            '& .MuiFormHelperText-root': {
+              color: '#a0aec0'
+            }
+          }}
+        >
+          <InputLabel id="industry-label">Industry</InputLabel>
+          <Select
+            labelId="industry-label"
+            id="industry"
+            value={formData.industry}
+            onChange={(e) => handleFormChange('industry', e.target.value)}
+            label="Industry"
           >
+            <MenuItem value="">
+              <em>Select an industry</em>
+            </MenuItem>
             {INDUSTRIES.map((industry) => (
               <MenuItem key={industry} value={industry}>{industry}</MenuItem>
             ))}
           </Select>
           {errors.industry && (
-            <FormHelperText error>{errors.industry}</FormHelperText>
+            <FormHelperText>Please select an industry</FormHelperText>
           )}
         </FormControl>
+        
+        <TextField
+          fullWidth
+          id="operationLocation"
+          label="Primary operation location (city/country)"
+          variant="outlined"
+          value={formData.operationLocation}
+          onChange={(e) => handleFormChange('operationLocation', e.target.value)}
+          error={errors.operationLocation}
+          helperText={errors.operationLocation ? 'Please enter your operation location' : ''}
+          sx={{
+            mb: 4,
+            '& .MuiInputLabel-root': {
+              color: '#a0aec0',
+              '&.Mui-focused': {
+                color: '#6c5ce7'
+              }
+            },
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: '#1e2430',
+              '& input, & textarea': {
+                color: '#e2e8f0',
+                '&::placeholder': {
+                  color: '#a0aec0',
+                  opacity: 0.7
+                }
+              },
+              '& fieldset': {
+                borderColor: 'transparent'
+              },
+              '&:hover fieldset': {
+                borderColor: '#6c5ce7'
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#6c5ce7'
+              }
+            },
+            '& .MuiFormHelperText-root': {
+              color: '#a0aec0'
+            }
+          }}
+        />
       </Grid>
     </Grid>
   );
@@ -248,7 +276,7 @@ const StartupForm = () => {
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: false
       }));
     }
   };
@@ -287,27 +315,25 @@ const StartupForm = () => {
     }
   };
 
+  const removeMarkdown = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/\*\*/g, '') // Remove bold
+      .replace(/\*/g, '')   // Remove italic
+      .replace(/^-\s+/gm, '') // Remove list bullets
+      .replace(/^\d+\.\s+/gm, '') // Remove numbered lists
+      .replace(/`/g, ''); // Remove code blocks
+  };
+
   const validateForm = () => {
-    const newErrors = {};
-    let isValid = true;
-
-    if (!formData.startupIdea?.trim()) {
-      newErrors.startupIdea = 'Please enter your startup idea';
-      isValid = false;
-    }
-
-    if (!formData.problemSolution?.trim()) {
-      newErrors.problemSolution = 'Please explain what problem your idea solves';
-      isValid = false;
-    }
-
-    if (!formData.industry?.trim()) {
-      newErrors.industry = 'Please select an industry';
-      isValid = false;
-    }
+    const newErrors = {
+      startupIdea: !formData.startupIdea.trim(),
+      industry: !formData.industry.trim(),
+      operationLocation: !formData.operationLocation.trim(),
+    };
 
     setErrors(newErrors);
-    return isValid;
+    return !Object.values(newErrors).some(Boolean);
   };
 
   const handleSubmit = async () => {
@@ -361,9 +387,9 @@ const StartupForm = () => {
   const renderCompetitorsStep = () => {
     if (loadingStage) {
       return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
-          <CircularProgress sx={{ mb: 3, color: '#6c5ce7' }} />
-          <Typography variant="h6" sx={{ color: 'white' }}>
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <CircularProgress />
+          <Typography variant="h6" sx={{ mt: 2, color: '#e2e8f0' }}>
             {loadingStage}
           </Typography>
         </Box>
@@ -372,7 +398,7 @@ const StartupForm = () => {
 
     if (!competitors.length) {
       return (
-        <Typography variant="body1" gutterBottom sx={{ color: 'white' }}>
+        <Typography variant="body1" gutterBottom sx={{ color: '#a0aec0' }}>
           No competitors found.
         </Typography>
       );
@@ -380,40 +406,51 @@ const StartupForm = () => {
 
     return (
       <>
-        <Typography variant="subtitle2" gutterBottom sx={{ color: '#a0aec0', mb: 3, fontStyle: 'italic', textAlign: 'center' }}>
+        <Typography variant="h5" sx={{ mb: 3, color: '#e2e8f0', borderBottom: '1px solid #3d4655', pb: 1 }}>
+          Top Competitors
+        </Typography>
+        
+        <Typography variant="subtitle2" gutterBottom sx={{ fontStyle: 'italic', textAlign: 'center', color: '#a0aec0' }}>
           Note: The market share data shown below is an AI-generated estimate based on available market information. These values should be considered approximate and used as a starting point for further research.
         </Typography>
         
-        <Grid container spacing={3}>
+        <Grid container spacing={3} direction="row">
           {competitors.map((competitor, index) => (
-            <Grid item xs={12} key={index}>
-              <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ color: '#e2e8f0', mb: 1 }}>
+            <Grid item xs={12} md={4} key={index}>
+              <Card sx={{ 
+                backgroundColor: '#1e2430', 
+                borderRadius: 2, 
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6" sx={{ mb: 1, color: '#e2e8f0', borderBottom: '1px solid #3d4655', pb: 1 }}>
                     {competitor.name}
                   </Typography>
                   <Box sx={{ mb: 1 }}>
-                    <Typography variant="body2" sx={{ color: '#a0aec0', display: 'inline' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#a0aec0' }}>
                       Market Share: 
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#e2e8f0', display: 'inline', ml: 1 }}>
-                      {Math.round(competitor.marketShare)}%
+                      <Typography component="span" variant="body2" sx={{ ml: 1, color: '#e2e8f0' }}>
+                        {Math.round(competitor.marketShare)}%
+                      </Typography>
                     </Typography>
                   </Box>
                   <Box sx={{ mb: 1 }}>
-                    <Typography variant="body2" sx={{ color: '#a0aec0', display: 'inline' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#a0aec0' }}>
                       Target Audience: 
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#e2e8f0', display: 'inline', ml: 1 }}>
-                      {competitor.targetAudience}
+                      <Typography component="span" variant="body2" sx={{ ml: 1, color: '#e2e8f0' }}>
+                        {competitor.targetAudience}
+                      </Typography>
                     </Typography>
                   </Box>
                   <Box>
-                    <Typography variant="body2" sx={{ color: '#a0aec0', display: 'inline' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#a0aec0' }}>
                       Marketing Strategies: 
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#e2e8f0', display: 'inline', ml: 1 }}>
-                      {competitor.marketingStrategies}
+                      <Typography component="span" variant="body2" sx={{ ml: 1, color: '#e2e8f0' }}>
+                        {competitor.marketingStrategies}
+                      </Typography>
                     </Typography>
                   </Box>
                 </CardContent>
@@ -421,6 +458,336 @@ const StartupForm = () => {
             </Grid>
           ))}
         </Grid>
+
+        {/* Business Strategy Section */}
+        {insights && insights.businessStrategy && (
+          <Box sx={{ mt: 5 }}>
+            <Typography variant="h5" sx={{ mb: 3, color: '#e2e8f0', borderBottom: '1px solid #3d4655', pb: 1 }}>
+              Business Strategy Insights
+            </Typography>
+            
+            <Grid container spacing={3}>
+              {/* Target Users */}
+              <Grid item xs={12}>
+                <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 2, color: '#e2e8f0' }}>
+                      Target Users
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                      {removeMarkdown(insights.businessStrategy.targetUsers || 'No data available')}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              {/* User Acquisition Strategy */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 2, color: '#e2e8f0' }}>
+                      User Acquisition Strategy
+                    </Typography>
+                    {insights.businessStrategy.userAcquisitionStrategy && insights.businessStrategy.userAcquisitionStrategy.length > 0 ? (
+                      <List dense>
+                        {insights.businessStrategy.userAcquisitionStrategy.map((strategy, index) => (
+                          <ListItem key={index} sx={{ py: 0.5 }}>
+                            <ListItemIcon sx={{ minWidth: 30 }}>
+                              <ArrowRightIcon sx={{ color: '#6c5ce7' }} />
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary={removeMarkdown(strategy)} 
+                              primaryTypographyProps={{ 
+                                variant: 'body2', 
+                                color: '#a0aec0' 
+                              }} 
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    ) : (
+                      <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                        No strategies available
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              {/* Business Models */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 2, color: '#e2e8f0' }}>
+                      Business Models
+                    </Typography>
+                    {insights.businessStrategy.businessModels && insights.businessStrategy.businessModels.length > 0 ? (
+                      <List dense>
+                        {insights.businessStrategy.businessModels.map((model, index) => (
+                          <ListItem key={index} sx={{ py: 0.5 }}>
+                            <ListItemIcon sx={{ minWidth: 30 }}>
+                              <ArrowRightIcon sx={{ color: '#6c5ce7' }} />
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary={removeMarkdown(model)} 
+                              primaryTypographyProps={{ 
+                                variant: 'body2', 
+                                color: '#a0aec0' 
+                              }} 
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    ) : (
+                      <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                        No business models available
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              {/* Metrics Row */}
+              <Grid item xs={12}>
+                <Grid container spacing={2}>
+                  {/* Revenue Per User */}
+                  <Grid item xs={6} md={3}>
+                    <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" sx={{ mb: 1, color: '#a0aec0' }}>
+                          Revenue per User
+                        </Typography>
+                        <Typography variant="h6" sx={{ color: '#6c5ce7' }}>
+                          {removeMarkdown(insights.businessStrategy.revenuePerUser || 'N/A')}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  
+                  {/* Minimum Investment */}
+                  <Grid item xs={6} md={3}>
+                    <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" sx={{ mb: 1, color: '#a0aec0' }}>
+                          Minimum Investment
+                        </Typography>
+                        <Typography variant="h6" sx={{ color: '#6c5ce7' }}>
+                          {removeMarkdown(insights.businessStrategy.minimumInvestment || 'N/A')}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  
+                  {/* Break-even Time */}
+                  <Grid item xs={6} md={3}>
+                    <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" sx={{ mb: 1, color: '#a0aec0' }}>
+                          Break-even Time
+                        </Typography>
+                        <Typography variant="h6" sx={{ color: '#6c5ce7' }}>
+                          {removeMarkdown(insights.businessStrategy.breakEvenTime || 'N/A')}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  
+                  {/* User Growth Rate */}
+                  <Grid item xs={6} md={3}>
+                    <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" sx={{ mb: 1, color: '#a0aec0' }}>
+                          User Growth Rate
+                        </Typography>
+                        <Typography variant="h6" sx={{ color: '#6c5ce7' }}>
+                          {removeMarkdown(insights.businessStrategy.userGrowthRate || 'N/A')}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </Grid>
+              
+              {/* Market Trends */}
+              <Grid item xs={12}>
+                <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 2, color: '#e2e8f0' }}>
+                      Supporting Market Trends
+                    </Typography>
+                    {insights.businessStrategy.marketTrends && insights.businessStrategy.marketTrends.length > 0 ? (
+                      <List dense>
+                        {insights.businessStrategy.marketTrends.map((trend, index) => (
+                          <ListItem key={index} sx={{ py: 0.5 }}>
+                            <ListItemIcon sx={{ minWidth: 30 }}>
+                              <TrendingUpIcon sx={{ color: '#6c5ce7' }} />
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary={removeMarkdown(trend)} 
+                              primaryTypographyProps={{ 
+                                variant: 'body2', 
+                                color: '#a0aec0' 
+                              }} 
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    ) : (
+                      <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                        No market trends available
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              {/* SWOT Analysis */}
+              {insights && insights.swot && (
+                <Grid item xs={12}>
+                  <Box sx={{ mt: 5 }}>
+                    <Typography variant="h5" sx={{ mb: 3, color: '#e2e8f0', borderBottom: '1px solid #3d4655', pb: 1 }}>
+                      SWOT Analysis
+                    </Typography>
+                    
+                    <Grid container spacing={3}>
+                      {/* Strengths */}
+                      <Grid item xs={12} md={6}>
+                        <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                          <CardContent>
+                            <Typography variant="h6" sx={{ mb: 2, color: '#4caf50' }}>
+                              Strengths
+                            </Typography>
+                            {insights.swot.strengths && insights.swot.strengths.length > 0 ? (
+                              <List dense>
+                                {insights.swot.strengths.map((strength, index) => (
+                                  <ListItem key={index} sx={{ py: 0.5 }}>
+                                    <ListItemIcon sx={{ minWidth: 30 }}>
+                                      <ArrowRightIcon sx={{ color: '#4caf50' }} />
+                                    </ListItemIcon>
+                                    <ListItemText 
+                                      primary={removeMarkdown(strength)} 
+                                      primaryTypographyProps={{ 
+                                        variant: 'body2', 
+                                        color: '#a0aec0' 
+                                      }} 
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                                No strengths identified
+                              </Typography>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      
+                      {/* Weaknesses */}
+                      <Grid item xs={12} md={6}>
+                        <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                          <CardContent>
+                            <Typography variant="h6" sx={{ mb: 2, color: '#f44336' }}>
+                              Weaknesses
+                            </Typography>
+                            {insights.swot.weaknesses && insights.swot.weaknesses.length > 0 ? (
+                              <List dense>
+                                {insights.swot.weaknesses.map((weakness, index) => (
+                                  <ListItem key={index} sx={{ py: 0.5 }}>
+                                    <ListItemIcon sx={{ minWidth: 30 }}>
+                                      <ArrowRightIcon sx={{ color: '#f44336' }} />
+                                    </ListItemIcon>
+                                    <ListItemText 
+                                      primary={removeMarkdown(weakness)} 
+                                      primaryTypographyProps={{ 
+                                        variant: 'body2', 
+                                        color: '#a0aec0' 
+                                      }} 
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                                No weaknesses identified
+                              </Typography>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      
+                      {/* Opportunities */}
+                      <Grid item xs={12} md={6}>
+                        <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                          <CardContent>
+                            <Typography variant="h6" sx={{ mb: 2, color: '#2196f3' }}>
+                              Opportunities
+                            </Typography>
+                            {insights.swot.opportunities && insights.swot.opportunities.length > 0 ? (
+                              <List dense>
+                                {insights.swot.opportunities.map((opportunity, index) => (
+                                  <ListItem key={index} sx={{ py: 0.5 }}>
+                                    <ListItemIcon sx={{ minWidth: 30 }}>
+                                      <ArrowRightIcon sx={{ color: '#2196f3' }} />
+                                    </ListItemIcon>
+                                    <ListItemText 
+                                      primary={removeMarkdown(opportunity)} 
+                                      primaryTypographyProps={{ 
+                                        variant: 'body2', 
+                                        color: '#a0aec0' 
+                                      }} 
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                                No opportunities identified
+                              </Typography>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      
+                      {/* Threats */}
+                      <Grid item xs={12} md={6}>
+                        <Card sx={{ backgroundColor: '#1e2430', borderRadius: 2, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                          <CardContent>
+                            <Typography variant="h6" sx={{ mb: 2, color: '#ff9800' }}>
+                              Threats
+                            </Typography>
+                            {insights.swot.threats && insights.swot.threats.length > 0 ? (
+                              <List dense>
+                                {insights.swot.threats.map((threat, index) => (
+                                  <ListItem key={index} sx={{ py: 0.5 }}>
+                                    <ListItemIcon sx={{ minWidth: 30 }}>
+                                      <ArrowRightIcon sx={{ color: '#ff9800' }} />
+                                    </ListItemIcon>
+                                    <ListItemText 
+                                      primary={removeMarkdown(threat)} 
+                                      primaryTypographyProps={{ 
+                                        variant: 'body2', 
+                                        color: '#a0aec0' 
+                                      }} 
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Typography variant="body2" sx={{ color: '#a0aec0' }}>
+                                No threats identified
+                              </Typography>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
+          </Box>
+        )}
       </>
     );
   };
@@ -428,9 +795,9 @@ const StartupForm = () => {
   const renderAnalysisStep = () => {
     if (loadingStage) {
       return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
-          <CircularProgress sx={{ mb: 3, color: '#6c5ce7' }} />
-          <Typography variant="h6" sx={{ color: 'white' }}>
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <CircularProgress />
+          <Typography variant="h6" sx={{ mt: 2, color: '#e2e8f0' }}>
             {loadingStage}
           </Typography>
         </Box>
@@ -454,40 +821,40 @@ const StartupForm = () => {
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} md={6}>
             <Paper sx={{ p: 3 }} elevation={2}>
-              <Typography variant="h6" color="primary" gutterBottom>
+              <Typography variant="h6" color="primary" gutterBottom sx={{ color: '#e2e8f0' }}>
                 Market Overview
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" sx={{ color: '#a0aec0' }}>
                 {insights.marketAnalysis?.summary}
               </Typography>
             </Paper>
           </Grid>
           <Grid item xs={12} md={6}>
             <Paper sx={{ p: 3 }} elevation={2}>
-              <Typography variant="h6" color="primary" gutterBottom>
+              <Typography variant="h6" color="primary" gutterBottom sx={{ color: '#e2e8f0' }}>
                 Competitive Analysis
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" sx={{ color: '#a0aec0' }}>
                 {insights.competitorInsights?.summary}
               </Typography>
             </Paper>
           </Grid>
           <Grid item xs={12} md={6}>
             <Paper sx={{ p: 3 }} elevation={2}>
-              <Typography variant="h6" color="primary" gutterBottom>
+              <Typography variant="h6" color="primary" gutterBottom sx={{ color: '#e2e8f0' }}>
                 Funding Strategy
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" sx={{ color: '#a0aec0' }}>
                 {insights.fundingInsights?.summary}
               </Typography>
             </Paper>
           </Grid>
           <Grid item xs={12} md={6}>
             <Paper sx={{ p: 3 }} elevation={2}>
-              <Typography variant="h6" color="primary" gutterBottom>
+              <Typography variant="h6" color="primary" gutterBottom sx={{ color: '#e2e8f0' }}>
                 Growth Strategy
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" sx={{ color: '#a0aec0' }}>
                 {insights.userGrowthInsights?.summary}
               </Typography>
             </Paper>
@@ -495,7 +862,7 @@ const StartupForm = () => {
         </Grid>
 
         <Box sx={{ mt: 4 }}>
-          <Typography variant="h5" gutterBottom>
+          <Typography variant="h5" gutterBottom sx={{ color: '#e2e8f0' }}>
             Detailed Analysis & Projections
           </Typography>
           <AnalysisDashboard analysisData={insights} />
@@ -508,6 +875,14 @@ const StartupForm = () => {
               setActiveStep(0);
               setInsights(null);
             }}
+            sx={{
+              color: '#e2e8f0',
+              borderColor: '#e2e8f0',
+              '&:hover': {
+                borderColor: '#5f50e1',
+                backgroundColor: 'rgba(108, 92, 231, 0.1)'
+              }
+            }}
           >
             Start New Analysis
           </Button>
@@ -515,6 +890,12 @@ const StartupForm = () => {
             variant="contained"
             onClick={() => {
               console.log('Save/Export analysis');
+            }}
+            sx={{
+              bgcolor: '#6c5ce7',
+              '&:hover': {
+                bgcolor: '#5f50e1'
+              }
             }}
           >
             Save Analysis
@@ -535,6 +916,12 @@ const StartupForm = () => {
             color="primary"
             onClick={() => navigate('/market-charts')}
             size="large"
+            sx={{
+              color: '#e2e8f0',
+              '&:hover': {
+                backgroundColor: '#5f50e1'
+              }
+            }}
           >
             View Market Analysis Charts
           </Button>
@@ -599,10 +986,10 @@ const StartupForm = () => {
           p: 3
         }}
       >
-        <Typography variant="h4" align="center" gutterBottom sx={{ color: 'white', mb: 4 }}>
+        <Typography variant="h4" align="center" gutterBottom sx={{ mb: 4, color: '#e2e8f0' }}>
           Startup Idea Analyzer
         </Typography>
-        <Typography variant="subtitle1" align="center" sx={{ color: '#718096', mb: 5 }}>
+        <Typography variant="subtitle1" align="center" sx={{ mb: 5, color: '#a0aec0' }}>
           Transform your idea into a viable business concept
         </Typography>
 
@@ -623,10 +1010,10 @@ const StartupForm = () => {
                   color: '#6c5ce7',
                 },
                 '& .MuiStepLabel-label.Mui-active.MuiStepLabel-alternativeLabel': {
-                  color: 'white',
+                  color: '#e2e8f0',
                 },
                 '& .MuiStepLabel-root .Mui-active .MuiStepIcon-text': {
-                  fill: 'white',
+                  fill: '#e2e8f0',
                 },
               }}
             >
@@ -651,8 +1038,8 @@ const StartupForm = () => {
                       variant="outlined"
                       onClick={() => fetchAnalysisHistory()}
                       sx={{
-                        color: '#6c5ce7',
-                        borderColor: '#6c5ce7',
+                        color: '#e2e8f0',
+                        borderColor: '#e2e8f0',
                         '&:hover': {
                           borderColor: '#5f50e1',
                           backgroundColor: 'rgba(108, 92, 231, 0.1)'
@@ -686,7 +1073,7 @@ const StartupForm = () => {
                     onClick={handleBack}
                     disabled={activeStep === 0 || loadingStage !== ''}
                     sx={{
-                      color: 'white',
+                      color: '#e2e8f0',
                       '&:hover': {
                         backgroundColor: 'rgba(255, 255, 255, 0.1)'
                       }
@@ -707,7 +1094,7 @@ const StartupForm = () => {
                       }}
                     >
                       {loadingStage !== '' ? (
-                        <CircularProgress size={24} sx={{ color: 'white' }} />
+                        <CircularProgress size={24} sx={{ color: '#e2e8f0' }} />
                       ) : activeStep === STEPS.length - 1 ? (
                         'Analyze'
                       ) : (
@@ -731,8 +1118,8 @@ const StartupForm = () => {
                     onClick={handleBack}
                     variant="outlined"
                     sx={{
-                      color: '#6c5ce7',
-                      borderColor: '#6c5ce7',
+                      color: '#e2e8f0',
+                      borderColor: '#e2e8f0',
                       '&:hover': {
                         borderColor: '#5f50e1',
                         backgroundColor: 'rgba(108, 92, 231, 0.1)'
@@ -839,7 +1226,7 @@ const StartupForm = () => {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <Typography variant="h5" sx={{ color: 'white', mb: 3 }}>
+              <Typography variant="h5" sx={{ mb: 3, color: '#e2e8f0' }}>
                 Analysis History
               </Typography>
               
@@ -864,7 +1251,7 @@ const StartupForm = () => {
                     <CardContent>
                       <Grid container spacing={2}>
                         <Grid item xs={12} md={6}>
-                          <Typography variant="subtitle1" sx={{ color: 'white' }}>
+                          <Typography variant="subtitle1" sx={{ color: '#e2e8f0' }}>
                             {item.marketData?.competitors?.[0]?.name ? `${item.marketData.competitors[0].name} Analysis` : 'Startup Analysis'}
                           </Typography>
                           <Typography variant="body2" sx={{ color: '#a0aec0' }}>
@@ -884,7 +1271,7 @@ const StartupForm = () => {
                   </Card>
                 ))
               ) : (
-                <Typography sx={{ color: '#a0aec0', textAlign: 'center', my: 4 }}>
+                <Typography sx={{ textAlign: 'center', my: 4, color: '#a0aec0' }}>
                   No analysis history found
                 </Typography>
               )}
