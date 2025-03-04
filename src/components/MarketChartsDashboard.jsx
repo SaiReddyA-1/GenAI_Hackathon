@@ -6,7 +6,6 @@ import { doc, getDoc } from 'firebase/firestore';
 import TargetAudienceChart from './charts/TargetAudienceChart';
 import MarketGrowthLineChart from './charts/MarketGrowthLineChart';
 import MarketShareChart from './charts/MarketShareChart';
-import SwotAnalysis from './charts/SwotAnalysis';
 import RiskAnalysis from './charts/RiskAnalysis';
 import RevenueAnalysis from './charts/RevenueAnalysis';
 import MarketingAnalysis from './charts/MarketingAnalysis';
@@ -133,19 +132,6 @@ const MarketChartsDashboard = () => {
         <h1 style={{ margin: 0, textAlign: 'center', width: '100%' }}>Market Analysis Dashboard</h1>
       </Box>
       
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 4 }}>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={() => {
-            localStorage.setItem('returnToStep', '1'); 
-            navigate('/dashboard');
-          }}
-        >
-          Back to Analysis
-        </Button>
-      </Box>
-      
       <Box sx={{ display: 'grid', gap: 4 }}>
         {/* Market Share and Competitors */}
         <Box sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
@@ -165,15 +151,23 @@ const MarketChartsDashboard = () => {
           <MarketGrowthLineChart data={marketData} />
         </Box>
 
-        {/* SWOT Analysis */}
-        <Box sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
-          {/* <h2>SWOT Analysis</h2> */}
-          <SwotAnalysis analysisId={analysisId} />
-        </Box>
-
         {/* Risk Analysis */}
       {/* <StartupAnalysis /> */}
-      </Box>  
+      </Box>
+      
+      {/* Back button moved to bottom left */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 5 }}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={() => {
+            localStorage.setItem('returnToStep', '1'); 
+            navigate('/dashboard');
+          }}
+        >
+          Back
+        </Button>
+      </Box>
     </Box>
   );
 };
