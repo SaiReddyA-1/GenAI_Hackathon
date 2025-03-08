@@ -1,4 +1,4 @@
-# Startup Analyzer
+# Startup Analyzerr
 
 A comprehensive web application that leverages AI and market data to provide in-depth startup analysis, market insights, and competitive intelligence.
 
